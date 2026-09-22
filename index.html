@@ -124,12 +124,14 @@ body:has(#motionToggle[aria-pressed="true"]) .category-card .card-plinth{transit
 </dialog>
 <dialog id="projectDialog" class="project-dialog" aria-labelledby="projectTitle"><div class="dialog-nav"><span class="eyebrow">Inside the project</span><button class="close-button" data-close="projectDialog"><span class="close-label">Close project</span><span class="circle">×</span></button></div><div id="projectContent"></div></dialog>
 <dialog id="contactDialog" class="contact-dialog" aria-labelledby="briefTitle"><div class="dialog-nav"><span class="eyebrow">A good place to begin</span><button class="close-button" data-close="contactDialog" aria-label="Close contact form"><span class="circle">×</span></button></div><div class="brief-body"><h2 id="briefTitle">What’s on your <span class="serif">mind?</span></h2><p>Share a few details to shape your project brief.</p><form id="briefForm" class="brief-form"><div class="form-row"><label>Your name<input name="name" autocomplete="name" required placeholder="Name"></label><label>Your email<input name="email" type="email" autocomplete="email" required placeholder="you@company.com"></label></div><label>What are you making?<select name="service" id="briefService"><option value="">Let’s figure it out</option>Game & mobile app</option>3D art & characters</option>Motion & post-production</option>Generative AI content</option></select></label><label>A little about your idea<textarea name="idea" required placeholder="The idea, the goal, a rough timeline…"></textarea></label><button type="submit" class="pill solid" id="briefSubmit">Prepare my brief <span class="arrow">↗</span></button><p class="no-contact" id="contactNotice">Preview mode: contact destinations haven’t been added yet. You can prepare and copy your brief; nothing is sent.</p><p class="form-feedback" id="formFeedback" role="status"></p><textarea id="preparedBrief" aria-label="Prepared project brief" readonly hidden></textarea><button type="button" class="pill" id="copyBrief" hidden>Copy brief</button></form></div></dialog>
+<script src="data/content.js"></script>
+<script src="portfolio-media.js"></script>
 <script>
 'use strict';
 /* EDIT HERE: real contact details and optional showreel. Never put secrets in this file.
    Projects support video, referenceImages, projectUrl, and image in addition to fields below. */
-const siteConfig = {email:'',telegram:'',whatsapp:'',heroVideo:''};
-const portfolioData = [
+const siteConfig = window.PORTFOLIO_CONTENT?.settings || {email:'',telegram:'',whatsapp:'',heroVideo:''};
+const portfolioData = window.PORTFOLIO_CONTENT?.categories?.map(c=>({...c,projects:c.projects.filter(p=>p.status!=='draft')})) || [
   {
     "id": "games",
     "number": "01",
@@ -369,6 +371,7 @@ const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':
 const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=reducedQuery.matches, paused=reduced, activeCategory=null, categoryTrigger=null, projectTrigger=null, syncingRoute=false;
 const mediaMarkup=(p,crop,video=false)=>{
+ if(video && p.video && window.portfolioYoutubeMarkup?.(p.video)) return window.portfolioYoutubeMarkup(p.video);
  if(video && p.video) return '<video controls playsinline preload="metadata" src="'+esc(p.video)+'"'+(p.image?' poster="'+esc(p.image)+'"':'')+'></video>';
  if(p.image && !p.demo) return '<img loading="lazy" src="'+esc(p.image)+'" alt="'+esc(p.title)+'" style="width:100%;height:100%;object-fit:cover">';
  return '<div class="atlas" style="--crop:'+crop+'" role="img" aria-label="'+esc(p.title)+' — concept artwork"></div>';
@@ -534,5 +537,6 @@ function tick(now){
 requestAnimationFrame(tick);
 </script>
 <script src="cards3d.js" defer></script>
+<script src="portfolio-integration.js" defer></script>
 </body>
 </html>
