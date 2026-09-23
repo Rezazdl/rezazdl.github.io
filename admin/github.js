@@ -8,9 +8,12 @@ export function githubClient(config){const c=repoConfig(config);const base=`http
   const doc=normalizeContent(content),uploads=[],known=new Map(),prefix=c.root?c.root+'/':'';
   async function upload(src){if(!src.startsWith('data:'))return src;if(known.has(src))return known.get(src);const match=src.match(/^data:(image\/(png|jpeg|webp|gif)|video\/(mp4));base64,(.+)$/);if(!match)throw Error('فایل آپلودشده معتبر نیست.');const bytes=Uint8Array.from(atob(match[4]),ch=>ch.charCodeAt(0));const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');const ext=match[2]||match[3],path=`assets/uploads/${digest.slice(0,24)}.${ext}`;onProgress('در حال ارسال فایل‌های جدید…');const blob=await api('/git/blobs','POST',{content:match[4],encoding:'base64'});uploads.push({path:prefix+path,mode:'100644',type:'blob',sha:blob.sha});known.set(src,path);return path}
   doc.settings.heroVideo=await upload(doc.settings.heroVideo);
+  doc.home.aboutPhoto=await upload(doc.home.aboutPhoto);
+  for(const section of doc.home.extraSections)section.image=await upload(section.image);
   for(const collection of doc.collections){collection.image=await upload(collection.image);for(const p of collection.projects){p.cover=await upload(p.cover);for(const m of p.media)if(m.type==='image')m.src=await upload(m.src)}}
   onProgress('در حال ذخیرهٔ محتوا…');const commit=await api('/git/commits/'+expectedHead);const tree=await api('/git/trees','POST',{base_tree:commit.tree.sha,tree:[...uploads,{path,mode:'100644',type:'blob',content:JSON.stringify(doc,null,2)+'\n'}]});const next=await api('/git/commits','POST',{message:'Update portfolio content from Rezazdl Studio',tree:tree.sha,parents:[expectedHead]});
   // An atomic, non-forced ref update rejects edits made while uploads were in flight.
   await api('/git/refs/heads/'+encodePath(c.branch),'PATCH',{sha:next.sha,force:false});return {content:doc,head:next.sha,commitURL:`https://github.com/${c.repo}/commit/${next.sha}`};
  }};
 }
+

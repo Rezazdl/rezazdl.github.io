@@ -1,3 +1,4 @@
+import {applyHome,homeText} from './homepage.js';
 import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js';
 document.documentElement.classList.add('js');
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], reduce=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:650px)'),clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),ease=x=>x*x*(3-2*x);
@@ -5,8 +6,8 @@ let motion=!reduce.matches,scheduled=false,manualPaused=false,heroVisible=true,a
 const hero=$('.hero'),heroTrack=$('.hero-track'),frame=$('.reel-frame'),video=$('#hero-video'),workTrack=$('.work-track'),cards=$$('.work-card'),about=$('.about'),aboutTitle=$('#about-title'),ribbon=$('.ribbon-content'),contact=$('.contact');
 if(aboutTitle)aboutTitle.innerHTML=aboutTitle.innerHTML.replace(/<br\s*\/?\s*>/gi,' ').split(/\s+/).filter(Boolean).map(w=>`<span class="word">${w}</span>`).join(' ');
 let heroProgress=clamp(scrollY/(mobile.matches?64:84)),heroTime=0;
-const words=$$('.word');
-function setMotion(on){motion=on;heroTime=0;heroProgress=clamp(scrollY/(mobile.matches?64:84));allowReducedPlayback=false;document.body.classList.toggle('no-motion',!on);if(!on){frame?.removeAttribute('style');hero?.removeAttribute('style');const sticker=$('.hero-sticker');if(sticker)sticker.style.opacity='1'}$$('.motion-toggle').forEach(b=>{b.setAttribute('aria-pressed',String(on));b.textContent=on?'Motion on':'Motion off'});syncPlayback();queue()}
+let words=$$('.word');
+function setMotion(on){motion=on;heroTime=0;heroProgress=clamp(scrollY/(mobile.matches?64:84));allowReducedPlayback=false;document.body.classList.toggle('no-motion',!on);if(!on){frame?.removeAttribute('style');hero?.removeAttribute('style');const sticker=$('.hero-sticker');if(sticker)sticker.style.opacity='1'}$$('.motion-toggle').forEach(b=>{b.setAttribute('aria-pressed',String(on));b.textContent=on?homeText('motionOn'):homeText('motionOff')});syncPlayback();queue()}
 function syncPlayback(){if(!video||!video.getAttribute('src'))return;const blocked=manualPaused||!heroVisible||document.hidden||!!$('dialog[open]')||(!motion&&!allowReducedPlayback);if(blocked)video.pause();else video.play().catch(()=>updatePlaybackButton())}
 function updatePlaybackButton(){const b=$('#reel-pause');if(b&&video){const label=video.paused?'Resume reel':'Pause reel';b.classList.toggle('is-paused',video.paused);b.setAttribute('aria-label',label);b.title=label}}
 
@@ -99,7 +100,7 @@ if(matchMedia('(pointer:fine)').matches){cards.forEach(c=>{c.addEventListener('p
 $$('dialog').forEach(d=>{d.querySelector('[data-close]')?.addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()});d.addEventListener('close',()=>{document.body.classList.toggle('locked',!!$('dialog[open]'));syncPlayback()})});
 $$('[data-contact="Email"]').forEach(b=>b.addEventListener('click',()=>{const d=$('#contact-dialog');d.showModal();document.body.classList.add('locked');syncPlayback()}));
 const emailForm=$('#email-form');
-if(emailForm){const recipient=emailForm.dataset.recipient?.trim();const submit=emailForm.querySelector('[type="submit"]'),status=$('#email-status');if(recipient){submit.disabled=false;status.textContent='Your message will open in your email app. Nothing is sent automatically.'}emailForm.addEventListener('submit',e=>{e.preventDefault();if(!recipient||!emailForm.reportValidity())return;const fields=new FormData(emailForm);const body=`${fields.get('message')}\n\nFrom: ${fields.get('name')}\nReply to: ${fields.get('email')}`;location.href=`mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(fields.get('subject'))}&body=${encodeURIComponent(body)}`;status.textContent='Your draft is ready in your email app. Review it there before sending.'})}
+if(emailForm){const recipient=()=>emailForm.dataset.recipient?.trim();const submit=emailForm.querySelector('[type="submit"]'),status=$('#email-status');if(recipient()){submit.disabled=false;status.textContent='Your message will open in your email app. Nothing is sent automatically.'}emailForm.addEventListener('submit',e=>{e.preventDefault();if(!recipient()||!emailForm.reportValidity())return;const fields=new FormData(emailForm);const body=`${fields.get('message')}\n\nFrom: ${fields.get('name')}\nReply to: ${fields.get('email')}`;location.href=`mailto:${encodeURIComponent(recipient())}?subject=${encodeURIComponent(fields.get('subject'))}&body=${encodeURIComponent(body)}`;status.textContent=homeText('emailOpened')})}
 // Editable collections and mixed-media albums.
 const collectionDialog=$('#collection-dialog'),projectDialog=$('#project-dialog');
 let collections=[],activeCollection=null,activeProject=null,albumIndex=0;
@@ -107,13 +108,16 @@ const isPreview=new URLSearchParams(location.search).has('preview');
 const contentReady=(async()=>{try{
  const draft=isPreview?await readDraft().catch(()=>null):null;
  const content=draft?.content?normalizeContent(draft.content):await loadPublished();
+ applyHome(content.home);
+ words=$$('.word');letters=[...document.querySelectorAll('#work-heading .kinetic-char')].map(el=>({el,lift:0}));
+ setMotion(motion);queue();
  collections=content.collections;
  if(draft?.content){const note=document.createElement('div');note.className='preview-banner';note.textContent='پیش‌نمایش — هنوز منتشر نشده';document.body.append(note)}
- collections.forEach(c=>{const card=$(`[data-collection="${c.id}"]`);if(card&&card.classList.contains('work-card')){card.querySelector('h3').textContent=c.title;const img=card.querySelector('img');if(assetURL(c.image))img.src=assetURL(c.image)}});
+ collections.forEach(c=>{const card=$(`[data-collection="${c.id}"]`);if(card&&card.classList.contains('work-card')){card.querySelector('h3').textContent=c.title;const img=card.querySelector('img');if(assetURL(c.image))img.src=assetURL(c.image);img.alt=c.title;card.setAttribute('aria-label','Open '+c.title+' gallery')}});
  const heroSource=assetURL(content.settings.heroVideo,'video');
  if(video){const control=$('#reel-pause');if(control)control.hidden=!heroSource;if(heroSource){video.src=heroSource;video.load();syncPlayback()}else{video.pause();video.removeAttribute('src');video.querySelectorAll('source').forEach(s=>s.remove());video.load()}}
  const a=content.settings.analytics;
- if(!isPreview&&a.enabled&&a.scriptUrl&&/^[a-f0-9-]{36}$/i.test(a.websiteId)){
+ if(!isPreview&&a.enabled&&a.scriptUrl&&/^[a-f0-9-]{36}$/i.test(a.websiteId)&&!document.querySelector('script[data-website-id]')){
   const tracker=document.createElement('script');tracker.defer=true;tracker.src=a.scriptUrl;tracker.dataset.websiteId=a.websiteId;document.head.append(tracker);
  }
  return true;
@@ -124,16 +128,16 @@ async function openCollection(id){
  const ready=await contentReady,collection=collections.find(c=>c.id===id);if(!collectionDialog)return;
  activeCollection=collection||null;
  $('#collection-title').textContent=collection?.title||'Work';$('#collection-description').textContent=collection?.description||'';
- $('#collection-kicker').textContent='SELECTED WORK';
+ $('#collection-kicker').textContent=homeText('galleryKicker');
  const projects=(collection?.projects||[]).filter(p=>p.published);
- $('#collection-count').textContent=`${String(projects.length).padStart(2,'0')} PROJECTS`;
- $('#collection-grid').innerHTML=projects.length?projects.map(p=>`<button type="button" class="gallery-item" data-project="${escapeHTML(p.id)}" aria-label="View ${escapeHTML(p.title)} project" aria-haspopup="dialog" aria-controls="project-dialog"><div class="gallery-item-image"><img src="${escapeHTML(assetURL(p.cover)||assetURL(p.media.find(m=>m.type==='image')?.src)||assetURL(collection.image))}" alt="${escapeHTML(p.title)}" width="1200" height="800" loading="lazy"><span class="gallery-open">${galleryArrow}</span></div><div class="gallery-item-meta"><h3>${escapeHTML(p.title)}</h3>${p.kind?`<p>${escapeHTML(p.kind)}</p>`:''}</div></button>`).join(''):`<p class="collection-empty">${ready?'No projects in this collection yet.':'Projects could not be loaded. Please refresh and try again.'}</p>`;
+ $('#collection-count').textContent=`${String(projects.length).padStart(2,'0')} ${homeText('projectsLabel')}`;
+ $('#collection-grid').innerHTML=projects.length?projects.map(p=>`<button type="button" class="gallery-item" data-project="${escapeHTML(p.id)}" aria-label="View ${escapeHTML(p.title)} project" aria-haspopup="dialog" aria-controls="project-dialog"><div class="gallery-item-image"><img src="${escapeHTML(assetURL(p.cover)||assetURL(p.media.find(m=>m.type==='image')?.src)||assetURL(collection.image))}" alt="${escapeHTML(p.title)}" width="1200" height="800" loading="lazy"><span class="gallery-open">${galleryArrow}</span></div><div class="gallery-item-meta"><h3>${escapeHTML(p.title)}</h3>${p.kind?`<p>${escapeHTML(p.kind)}</p>`:''}</div></button>`).join(''):`<p class="collection-empty">${escapeHTML(ready?homeText('emptyGallery'):homeText('galleryError'))}</p>`;
  collectionDialog.showModal();collectionDialog.scrollTop=0;document.body.classList.add('locked');syncPlayback();$('#collection-title').focus({preventScroll:true});track('open-collection',{collection:id});
 }
 function openProject(id){
  if(!activeCollection)return;const projects=activeCollection.projects.filter(p=>p.published),i=projects.findIndex(p=>p.id===id),p=projects[i];if(!p)return;
  activeProject=p;albumIndex=0;$('#detail-position').textContent=`${String(i+1).padStart(2,'0')} / ${String(projects.length).padStart(2,'0')}`;
- $('#project-content').innerHTML=`<div class="detail-heading"><div class="eyebrow">${escapeHTML(activeCollection.title)}</div><h2 class="display" id="detail-title" tabindex="-1">${escapeHTML(p.title)}</h2><p id="detail-subtitle">${escapeHTML(p.subtitle)}</p></div><figure class="album" aria-label="Project media gallery" aria-roledescription="carousel"><div class="album-stage" id="album-stage"></div><figcaption class="album-nav"><span class="album-caption" id="album-caption"></span><span class="album-count" id="album-count" aria-live="polite"></span><div class="album-arrows"><button type="button" data-slide="-1" aria-label="Previous media">←</button><button type="button" data-slide="1" aria-label="Next media">→</button></div></figcaption></figure><dl class="detail-facts">${p.facts.filter(f=>f.label||f.value).map(f=>`<div><dt>${escapeHTML(f.label)}</dt><dd>${escapeHTML(f.value)}</dd></div>`).join('')}</dl>${p.sections.filter(s=>s.heading||s.body).map(s=>`<section class="case-section ${s.heading?'':'no-heading'}">${s.heading?`<h3>${escapeHTML(s.heading)}</h3>`:''}<div class="custom-section-body">${renderText(s.body)}</div></section>`).join('')}<div class="project-end"><span>${escapeHTML(activeCollection.title)}</span><button type="button" data-return-gallery>Back to the gallery ↑</button></div>`;
+ $('#project-content').innerHTML=`<div class="detail-heading"><div class="eyebrow">${escapeHTML(activeCollection.title)}</div><h2 class="display" id="detail-title" tabindex="-1">${escapeHTML(p.title)}</h2><p id="detail-subtitle">${escapeHTML(p.subtitle)}</p></div><figure class="album" aria-label="Project media gallery" aria-roledescription="carousel"><div class="album-stage" id="album-stage"></div><figcaption class="album-nav"><span class="album-caption" id="album-caption"></span><span class="album-count" id="album-count" aria-live="polite"></span><div class="album-arrows"><button type="button" data-slide="-1" aria-label="Previous media">←</button><button type="button" data-slide="1" aria-label="Next media">→</button></div></figcaption></figure><dl class="detail-facts">${p.facts.filter(f=>f.label||f.value).map(f=>`<div><dt>${escapeHTML(f.label)}</dt><dd>${escapeHTML(f.value)}</dd></div>`).join('')}</dl>${p.sections.filter(s=>s.heading||s.body).map(s=>`<section class="case-section ${s.heading?'':'no-heading'}">${s.heading?`<h3>${escapeHTML(s.heading)}</h3>`:''}<div class="custom-section-body">${renderText(s.body)}</div></section>`).join('')}<div class="project-end"><span>${escapeHTML(activeCollection.title)}</span><button type="button" data-return-gallery>${escapeHTML(homeText('projectBack'))}</button></div>`;
  renderAlbum();projectDialog.showModal();projectDialog.scrollTop=0;document.body.classList.add('locked');syncPlayback();$('#detail-title').focus({preventScroll:true});track('open-project',{project:p.id,collection:activeCollection.id});
  let startX=0,startY=0;const stage=$('#album-stage');
  stage.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY},{passive:true});
@@ -142,7 +146,7 @@ function openProject(id){
 function albumMedia(){return (activeProject?.media||[]).filter(m=>m.type==='youtube'?youtubeId(m.src):assetURL(m.src))}
 function renderAlbum(){const stage=$('#album-stage');if(!stage)return;const media=albumMedia();if(!media.length){stage.closest('.album').hidden=true;return}
  const m=media[albumIndex],id=m.type==='youtube'?youtubeId(m.src):null;
- stage.innerHTML=id?`<button type="button" class="youtube-start" data-youtube="${id}" aria-label="Play YouTube video"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="${escapeHTML(m.alt||activeProject.title)}"><span>▶ Watch video</span></button>`:`<img src="${escapeHTML(assetURL(m.src))}" alt="${escapeHTML(m.alt||activeProject.title)}" draggable="false">`;
+ stage.innerHTML=id?`<button type="button" class="youtube-start" data-youtube="${id}" aria-label="Play YouTube video"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="${escapeHTML(m.alt||activeProject.title)}"><span>${escapeHTML(homeText('watchVideo'))}</span></button>`:`<img src="${escapeHTML(assetURL(m.src))}" alt="${escapeHTML(m.alt||activeProject.title)}" draggable="false">`;
  $('#album-caption').textContent=m.caption;$('#album-count').textContent=`${albumIndex+1} / ${media.length}`;
  $('.album-arrows').hidden=media.length<2;$('#album-count').hidden=media.length<2;$('.album-nav').hidden=media.length<2&&!m.caption;
 }
@@ -153,3 +157,4 @@ $('#back-to-gallery')?.addEventListener('click',()=>projectDialog.close());
 $('#project-content')?.addEventListener('click',e=>{if(e.target.closest('[data-return-gallery]'))projectDialog.close();const slide=e.target.closest('[data-slide]');if(slide)stepAlbum(Number(slide.dataset.slide));const play=e.target.closest('[data-youtube]');if(play){const id=play.dataset.youtube;if(!/^[\w-]{11}$/.test(id))return;$('#album-stage').innerHTML=`<iframe title="${escapeHTML(activeProject.title)} — YouTube video" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;track('play-project-video',{project:activeProject.id})}});
 projectDialog?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;e.preventDefault();stepAlbum(e.key==='ArrowLeft'?-1:1)}});
 projectDialog?.addEventListener('close',()=>{const stage=$('#album-stage');if(stage)stage.replaceChildren();activeProject=null});
+
