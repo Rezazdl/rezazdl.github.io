@@ -1,5 +1,5 @@
-import {HOME_FIELDS,HOME_SECTIONS,homeDefaults} from './homepage-model.js?v=20260923-home2';
-import {assetURL,escapeHTML as esc,renderText} from './content-model.js?v=20260923-home2';
+import {HOME_FIELDS,HOME_SECTIONS,homeDefaults} from './homepage-model.js?v=20260923-images3';
+import {assetURL,escapeHTML as esc,renderText} from './content-model.js?v=20260923-images3';
 let copy=homeDefaults();
 export const homeText=key=>copy[key]??'';
 const lines=text=>String(text).split('\n').map(esc).join('<br>');

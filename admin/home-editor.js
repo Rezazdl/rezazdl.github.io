@@ -1,5 +1,5 @@
-import {HOME_FIELDS,HOME_GROUPS,HOME_SECTIONS} from '../homepage-model.js?v=20260923-home2';
-import {assetURL,safeAsset,httpsURL,escapeHTML as esc} from '../content-model.js?v=20260923-home2';
+import {HOME_FIELDS,HOME_GROUPS,HOME_SECTIONS} from '../homepage-model.js?v=20260923-images3';
+import {assetURL,safeAsset,httpsURL,escapeHTML as esc} from '../content-model.js?v=20260923-images3';
 
 export function homeEditor({getContent,changed,imageData,notify}){
  const root=document.querySelector('#home-editor');

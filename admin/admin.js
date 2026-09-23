@@ -1,6 +1,7 @@
-import {homeEditor} from './home-editor.js?v=20260923-home2';
-import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js?v=20260923-home2';
-import {githubClient} from './github.js?v=20260923-home2';
+import {installImageRecovery} from '../image-loading.js?v=20260923-images3';
+import {homeEditor} from './home-editor.js?v=20260923-images3';
+import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js?v=20260923-images3';
+import {githubClient} from './github.js?v=20260923-images3';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let content,baseline='',dirty=false,collectionId='video',projectId='',client=null,head='',saving=Promise.resolve(),saveTimer,busy=false;
 const newId=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -10,6 +11,7 @@ function status(message){$('#save-state').textContent=message}
 function persist(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>flush(),250)}
 async function flush(){clearTimeout(saveTimer);const snapshot={content:structuredClone(content),baseline,dirty,updatedAt:Date.now()};saving=saving.catch(()=>{}).then(()=>saveDraft(snapshot));try{await saving;status(dirty?'پیش‌نویس ذخیره شد':'مطابق نسخهٔ منتشرشده')}catch{status('ذخیره نشد');notify('فضای مرورگر کافی نیست. پیش از بستن صفحه فایل پشتیبان را دانلود کنید.',true)}}
 function changed(){dirty=true;status('در حال ذخیرهٔ پیش‌نویس…');$('#publish').disabled=false;persist()}
+installImageRecovery(document,()=>notify('عکس ذخیره شده است، اما دریافت فایل موفق نبود. اتصال اینترنت را بررسی و صفحه را دوباره باز کنید؛ نیازی به آپلود مجدد نیست.',true));
 const homeUI=homeEditor({getContent:()=>content,changed,imageData,notify});
 function showView(view){$$('.view').forEach(el=>el.hidden=el.id!=='view-'+view);$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));$('#view-title').textContent={home:'صفحهٔ اصلی',projects:'پروژه‌ها',settings:'تنظیمات و انتشار',stats:'آمار بازدید'}[view];if(view==='home')homeUI.render();if(view==='settings')renderSettings();if(view==='stats')renderStats()}
 $$('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));

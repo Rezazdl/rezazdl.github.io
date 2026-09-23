@@ -1,6 +1,8 @@
-import {applyHome,homeText} from './homepage.js?v=20260923-home2';
-import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-home2';
+import {installImageRecovery} from './image-loading.js?v=20260923-images3';
+import {applyHome,homeText} from './homepage.js?v=20260923-images3';
+import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-images3';
 document.documentElement.classList.add('js');
+installImageRecovery(document);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], reduce=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:650px)'),clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),ease=x=>x*x*(3-2*x);
 let motion=!reduce.matches,scheduled=false,manualPaused=false,heroVisible=true,allowReducedPlayback=false;
 const hero=$('.hero'),heroTrack=$('.hero-track'),frame=$('.reel-frame'),video=$('#hero-video'),workTrack=$('.work-track'),cards=$$('.work-card'),about=$('.about'),aboutTitle=$('#about-title'),ribbon=$('.ribbon-content'),contact=$('.contact');

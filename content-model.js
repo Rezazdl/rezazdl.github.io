@@ -1,10 +1,10 @@
-import {normalizeHome} from './homepage-model.js?v=20260923-home2';
+import {normalizeHome} from './homepage-model.js?v=20260923-images3';
 export const CONTENT_PATH='content/portfolio.json';
 export const DRAFT_KEY='rezazdl-content-v1';
 export const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function youtubeId(value){try{const u=new URL(value);if(u.protocol!=='https:')return null;const host=u.hostname.toLowerCase().replace(/^www\./,'');let id;if(host==='youtu.be')id=u.pathname.slice(1).split('/')[0];else if(['youtube.com','m.youtube.com','youtube-nocookie.com'].includes(host))id=u.searchParams.get('v')||u.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null}catch{return null}}
 export function safeAsset(value,kind='image'){if(typeof value!=='string')return '';if(kind==='image'&&/^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value))return value;if(kind==='video'&&/^data:video\/mp4;base64,[A-Za-z0-9+/=]+$/.test(value))return value;if(/^assets\/[A-Za-z0-9_./-]+$/.test(value)&&!value.includes('..'))return value;try{const u=new URL(value);if(u.protocol==='https:'&&!u.username&&!u.password)return u.href}catch{}return ''}
-export function assetURL(value,kind='image'){const safe=safeAsset(value,kind);return safe?new URL(safe,document.baseURI).href:''}
+export function assetURL(value,kind='image'){const safe=safeAsset(value,kind);if(!safe)return '';const url=new URL(safe,document.baseURI);if(kind==='image'&&url.origin===new URL(document.baseURI).origin&&url.pathname.includes('/assets/uploads/'))url.searchParams.set('asset-version','2');return url.href}
 export function httpsURL(value){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch{return ''}}
 const str=(v,max=60000)=>String(v??'').slice(0,max);
 export function normalizeContent(raw){
