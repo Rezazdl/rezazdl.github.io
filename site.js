@@ -1,5 +1,5 @@
-import {applyHome,homeText} from './homepage.js';
-import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js';
+import {applyHome,homeText} from './homepage.js?v=20260923-home2';
+import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-home2';
 document.documentElement.classList.add('js');
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], reduce=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:650px)'),clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),ease=x=>x*x*(3-2*x);
 let motion=!reduce.matches,scheduled=false,manualPaused=false,heroVisible=true,allowReducedPlayback=false;

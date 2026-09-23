@@ -1,4 +1,4 @@
-import {normalizeHome} from './homepage-model.js';
+import {normalizeHome} from './homepage-model.js?v=20260923-home2';
 export const CONTENT_PATH='content/portfolio.json';
 export const DRAFT_KEY='rezazdl-content-v1';
 export const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

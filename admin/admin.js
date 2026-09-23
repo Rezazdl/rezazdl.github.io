@@ -1,6 +1,6 @@
-import {homeEditor} from './home-editor.js';
-import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js';
-import {githubClient} from './github.js';
+import {homeEditor} from './home-editor.js?v=20260923-home2';
+import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js?v=20260923-home2';
+import {githubClient} from './github.js?v=20260923-home2';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let content,baseline='',dirty=false,collectionId='video',projectId='',client=null,head='',saving=Promise.resolve(),saveTimer,busy=false;
 const newId=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
