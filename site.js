@@ -30,7 +30,7 @@ if(hero&&heroTrack&&frame){
  hero.style.setProperty('--title-o',String(1-text));
  hero.style.setProperty('--intro-y',`${-intro*24}px`);
  hero.style.setProperty('--intro-o',String(1-intro));
- const startW=small?78:tablet?53:innerWidth>=1700?46:48,startR=small?9:tablet?5:innerWidth>=1700?(innerWidth-1550)/2/innerWidth*100:6.5,startT=small?28:tablet?23:17,startH=small?38:tablet?45:55;
+ const startW=small?78:tablet?53:innerWidth>=1700?46:48,startR=small?9:tablet?5:innerWidth>=1700?(innerWidth-1550)/2/innerWidth*100:6.5,startT=small?28:tablet?23:17,startH=small?(hero.clientWidth*.78*9/16)/hero.clientHeight*100:tablet?45:55;
  frame.style.width=`${startW+(100-startW)*q}%`;
  frame.style.right=`${startR*(1-q)}%`;
  frame.style.top=`${startT*(1-q)}%`;
