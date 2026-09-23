@@ -1,0 +1,433 @@
+{
+  "version": 1,
+  "settings": {
+    "heroVideo": "",
+    "analytics": {
+      "enabled": false,
+      "scriptUrl": "https://cloud.umami.is/script.js",
+      "websiteId": ""
+    }
+  },
+  "collections": [
+    {
+      "id": "video",
+      "title": "Video & Brand Content",
+      "description": "Motion graphics, advertising and brand films.",
+      "image": "assets/brand-light.webp",
+      "projects": [
+        {
+          "id": "colour-in-motion",
+          "title": "Colour in Motion",
+          "subtitle": "A sculptural world built around one bold colour.",
+          "kind": "Brand film",
+          "published": true,
+          "cover": "assets/brand-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/brand-light.webp",
+              "caption": "",
+              "alt": "Colour in Motion"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Brand film"
+            },
+            {
+              "label": "Role",
+              "value": "Art direction · 3D design · Motion"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Imagine a short brand film for a design-led product launch. The idea is to communicate energy and confidence through colour, material and movement, without relying on a long explanation or a product feature list."
+            },
+            {
+              "heading": "The idea",
+              "body": "The visual direction pairs translucent orange glass with a matte cobalt sphere and a brushed-metal accent. Each material has a different relationship with light. The contrast creates a clear focal point while leaving room for movement, close-ups and graphic compositions."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Find the visual language\nExplore colour, silhouette and material combinations before settling on a small, coherent family of objects.\n\n### Build the movement\nBlock out the camera and object choreography so that every shot has a clear beginning, focal point and transition.\n\n### Shape the final film\nRefine lighting and pacing, then prepare consistent compositions for the main film and shorter social cuts."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Main brand-film concept\n- Short-form campaign cutdowns\n- Still-image art direction\n- Wide and vertical composition studies"
+            }
+          ]
+        },
+        {
+          "id": "the-launch",
+          "title": "The Launch",
+          "subtitle": "A product reveal that earns its moment.",
+          "kind": "Launch campaign",
+          "published": true,
+          "cover": "assets/brand-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/brand-light.webp",
+              "caption": "",
+              "alt": "The Launch"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Launch campaign"
+            },
+            {
+              "label": "Role",
+              "value": "Creative direction · Product visualisation"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Develop a launch-film concept that introduces a new object gradually, using light and close-up detail to create anticipation before the complete reveal."
+            },
+            {
+              "heading": "The idea",
+              "body": "Start with abstract details of the surface, then let wider compositions reveal how the parts relate. A restrained palette keeps the focus on the object, while the progression from detail to silhouette gives the film a simple narrative."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Define the reveal\nChoose the one product quality the viewer should remember and build a shot sequence around it.\n\n### Explore the surfaces\nStudy reflections, edges and material contrast to make close-up shots visually distinct.\n\n### Design the campaign set\nAdapt the main compositions into teaser frames, launch visuals and short social edits."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Reveal-film treatment\n- Teaser concepts\n- Campaign key visuals\n- Social-format adaptations"
+            }
+          ]
+        },
+        {
+          "id": "play-it-again",
+          "title": "Play it Again",
+          "subtitle": "A compact idea with room to repeat.",
+          "kind": "Social motion series",
+          "published": true,
+          "cover": "assets/brand-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/brand-light.webp",
+              "caption": "",
+              "alt": "Play it Again"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Social motion series"
+            },
+            {
+              "label": "Role",
+              "value": "Motion design · Visual systems"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Create a family of short social visuals that feels consistent across a campaign while giving each post a recognisable moment of its own."
+            },
+            {
+              "heading": "The idea",
+              "body": "Treat colour, objects and camera angles as a small visual toolkit. Repeat the underlying rhythm, then vary scale, composition and the way the objects meet. The system is intended to be flexible enough for new messages without losing its character."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Set the rules\nDefine the palette, object family and pacing that make the series recognisable.\n\n### Explore variations\nTest a few distinct movements and crops against the same visual rules.\n\n### Prepare the formats\nPlan loops and end frames for square, portrait and vertical placements."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Motion-system concept\n- Looping social studies\n- Format guidelines\n- Campaign stills"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3d",
+      "title": "3D & Animation",
+      "description": "Character design, animation and look development.",
+      "image": "assets/character.webp",
+      "projects": [
+        {
+          "id": "meet-momo",
+          "title": "Meet Momo",
+          "subtitle": "A little orange character. A lot of personality.",
+          "kind": "Character concept",
+          "published": true,
+          "cover": "assets/character.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/character.webp",
+              "caption": "",
+              "alt": "Meet Momo"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Character concept"
+            },
+            {
+              "label": "Role",
+              "value": "Character direction · Look development"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Explore a character that could make an animation-led creative portfolio feel welcoming and recognisable. The character should read clearly at a small size, feel expressive in a still frame and suggest movement without needing an explanation."
+            },
+            {
+              "heading": "The idea",
+              "body": "Momo combines a soft, rounded silhouette with bright orange fur and oversized cobalt headphones. The open pose, eye direction and simple colour contrast establish a cheerful personality. A clean lavender environment leaves the silhouette and expression in focus."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Find the personality\nDefine the mood and the key character traits before exploring proportions, pose and expression.\n\n### Develop the look\nBalance the tactile fur with clean accessories and soft studio lighting.\n\n### Plan the performance\nIdentify a small set of expressive poses and movement ideas that could form the basis of an animation test."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Character visual direction\n- Colour and material study\n- Hero composition\n- Proposed pose and animation direction"
+            }
+          ]
+        },
+        {
+          "id": "soft-spot",
+          "title": "Soft Spot",
+          "subtitle": "An exploration of warmth, texture and expression.",
+          "kind": "Look development",
+          "published": true,
+          "cover": "assets/character.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/character.webp",
+              "caption": "",
+              "alt": "Soft Spot"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Look development"
+            },
+            {
+              "label": "Role",
+              "value": "Material direction · Lighting"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Study how surface texture and soft lighting can give a simple character a distinct emotional quality, while keeping the face and silhouette readable."
+            },
+            {
+              "heading": "The idea",
+              "body": "Use the orange fur as the main material and the headphones as a contrasting hard surface. Broad, soft lighting reveals volume without flattening the texture. The background remains quiet so that expression, shape and colour carry the composition."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Choose the contrast\nPair one tactile material with one clean surface to create a useful visual tension.\n\n### Study the lighting\nExplore light direction and softness to preserve both texture and facial readability.\n\n### Refine the composition\nCheck the balance between the character, negative space and background colour."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Material mood study\n- Lighting direction\n- Character presentation concept\n- Composition references"
+            }
+          ]
+        },
+        {
+          "id": "good-vibrations",
+          "title": "Good Vibrations",
+          "subtitle": "A character performance inspired by rhythm.",
+          "kind": "Animation direction",
+          "published": true,
+          "cover": "assets/character.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/character.webp",
+              "caption": "",
+              "alt": "Good Vibrations"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Animation direction"
+            },
+            {
+              "label": "Role",
+              "value": "Performance planning · Motion direction"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Develop a short performance idea in which a character’s reaction to music becomes the story. The intended feeling is spontaneous and playful, with a clear sequence that can also work as a loop."
+            },
+            {
+              "heading": "The idea",
+              "body": "Build the performance around anticipation, a moment of release and a soft recovery. Keep the silhouette easy to read and let the head, body and accessories react at slightly different times to suggest weight and personality."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Map the beat\nDecide where the main gesture happens and how the performance prepares for it.\n\n### Explore the poses\nPlan a small number of strong poses before refining the transitions between them.\n\n### Close the loop\nDesign the recovery so that the last pose can lead naturally into the first."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Performance treatment\n- Pose-sequence proposal\n- Timing direction\n- Loop concept"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interactive",
+      "title": "Interactive & Games",
+      "description": "Game art, environments and interaction design.",
+      "image": "assets/game-light.webp",
+      "projects": [
+        {
+          "id": "a-little-leap",
+          "title": "A Little Leap",
+          "subtitle": "A small adventure between floating worlds.",
+          "kind": "Game-world concept",
+          "published": true,
+          "cover": "assets/game-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/game-light.webp",
+              "caption": "",
+              "alt": "A Little Leap"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Game-world concept"
+            },
+            {
+              "label": "Role",
+              "value": "World direction · Game-art concept"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Imagine a light-hearted platforming world built around a simple action: one small rabbit making the next jump. The environment should make the route readable while still rewarding the player’s curiosity."
+            },
+            {
+              "heading": "The idea",
+              "body": "Floating islands create a clear relationship between the current platform and the next destination. Soft blue atmosphere separates the background from the foreground, while the orange rabbit remains easy to follow. Rounded forms and warm terrain support an inviting tone."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Define the experience\nStart with the intended feeling and the core action before adding environmental detail.\n\n### Build a readable world\nArrange platforms, silhouettes and colour contrast so that the next destination feels clear.\n\n### Plan a playable slice\nOutline a small sequence of jumps to test scale, pacing and the relationship between art and interaction."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Environment visual concept\n- Character and world palette\n- Platform-layout direction\n- Prototype scope proposal"
+            }
+          ]
+        },
+        {
+          "id": "daydream",
+          "title": "Daydream",
+          "subtitle": "A world that feels soft, spacious and a little impossible.",
+          "kind": "Environment study",
+          "published": true,
+          "cover": "assets/game-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/game-light.webp",
+              "caption": "",
+              "alt": "Daydream"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Environment study"
+            },
+            {
+              "label": "Role",
+              "value": "Environment art direction"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Explore an environment with a clear sense of depth and a memorable atmosphere. The scene should feel generous and inviting while keeping the foreground action visually distinct."
+            },
+            {
+              "heading": "The idea",
+              "body": "Layers of floating terrain, soft clouds and distant structures establish depth. A limited pastel palette ties the scene together, with warmer tones reserved for surfaces close to the character. Architectural fragments suggest a wider world without explaining all of it."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Set the atmosphere\nChoose a palette and lighting direction that support the mood of the world.\n\n### Organise the layers\nSeparate foreground, midground and background through scale, contrast and colour.\n\n### Guide the eye\nPlace landmarks and areas of negative space to create clear visual routes through the scene."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Environment mood concept\n- Palette and atmosphere direction\n- Landmark exploration\n- Scene-composition study"
+            }
+          ]
+        },
+        {
+          "id": "hopscotch",
+          "title": "Hopscotch",
+          "subtitle": "One simple mechanic. Plenty of room to play.",
+          "kind": "Interaction concept",
+          "published": true,
+          "cover": "assets/game-light.webp",
+          "media": [
+            {
+              "type": "image",
+              "src": "assets/game-light.webp",
+              "caption": "",
+              "alt": "Hopscotch"
+            }
+          ],
+          "facts": [
+            {
+              "label": "Project type",
+              "value": "Interaction concept"
+            },
+            {
+              "label": "Role",
+              "value": "Interaction direction · Game concept"
+            }
+          ],
+          "sections": [
+            {
+              "heading": "The brief",
+              "body": "Outline a compact game idea based on approachable jumping mechanics. The aim is to create a clear first interaction and introduce variety gradually, without overwhelming the player."
+            },
+            {
+              "heading": "The idea",
+              "body": "Use a short sequence of platforms to establish timing, distance and recovery. Each new layout can introduce one change, such as a wider gap or a smaller landing area. The visual direction keeps the intended destination clear and the tone light."
+            },
+            {
+              "heading": "The approach",
+              "body": "### Start with one action\nDefine the controls and the feedback for a single satisfying jump.\n\n### Introduce variation\nPlan small changes in spacing and rhythm, with each section teaching one new idea.\n\n### Test the experience\nUse a prototype to evaluate readability and pacing before committing to full production art."
+            },
+            {
+              "heading": "Deliverables",
+              "body": "- Core-mechanic outline\n- Interaction-flow proposal\n- Level-pacing sketch\n- Prototype test plan"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

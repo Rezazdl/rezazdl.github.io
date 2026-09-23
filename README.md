@@ -1,10 +1,10 @@
 # Rezazdl portfolio
 
-Upload these extracted files to the ROOT of a GitHub repository.
-Enable Settings > Pages > Deploy from a branch > main > / (root).
-Every push to main publishes an update.
+Static portfolio published by GitHub Pages from main / (root).
 
-Edit portfolioData in index.html to update portfolio content.
-The cards3d.js file is the compiled 3D runtime.
-
-Set rezazdl.com as the custom domain only after configuring and verifying domain ownership and DNS. No custom domain is preconfigured in this package.
+- Site: https://rezazdl.com
+- Editor: https://rezazdl.com/admin/
+- Content: content/portfolio.json
+- In the editor use repository Rezazdl/rezazdl.github.io, branch main, and leave the site folder empty.
+- Hero video is intentionally empty. Add your MP4 in Admin → Settings and publish.
+- Keep CNAME for the custom domain.

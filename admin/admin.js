@@ -1,246 +1,69 @@
-(() => {
-  'use strict';
-  const $ = selector => document.querySelector(selector);
-  const core = window.PortfolioCore;
-  let data, store = null, dirty = false, busy = false, editing = null;
-  const uploads = new Map(), deletions = new Set(), previews = new Map();
-  const localKey = 'rezazdl-draft:' + location.origin + location.pathname;
-  const connectionKey = 'rezazdl-repo:' + location.origin + location.pathname;
-  const titles = {projects:'پروژه‌های من',media:'کتابخانه عکس‌ها',analytics:'آمار بازدید',settings:'تنظیمات سایت',connection:'اتصال به گیت‌هاب'};
-  const status = (message, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error',error); };
-  const element = (tag, text, className) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; if (className) el.className = className; return el; };
-  const button = (text, action, className = 'secondary') => { const el = element('button',text,className); el.type = 'button'; el.onclick = () => { if (!busy) action(); }; return el; };
-  function run(task) { return Promise.resolve().then(task).catch(error => status(error.message,true)); }
-  function getLocal(key) { try { return localStorage.getItem(key); } catch { return null; } }
-  function putLocal(key, value) { try { localStorage.setItem(key,value); } catch { status('فضای ذخیره مرورگر در دسترس نیست؛ قبل از خروج پشتیبان بگیر.',true); } }
-  function clearLocal(key) { try { localStorage.removeItem(key); } catch { /* Optional recovery storage. */ } }
-  function markDirty() {
-    dirty = true;
-    // Uploaded bytes stay in memory. Recovery is offered only when no uploads are pending.
-    if (!uploads.size) putLocal(localKey,JSON.stringify({data,base:store?.base || null,repo:getLocal(connectionKey),deletions:[...deletions]}));
-    else clearLocal(localKey);
-    $('#publish').disabled = !store || busy;
-    status(uploads.size ? 'تغییرات آماده انتشار است. تا پایان انتشار این صفحه را نبند؛ فایل‌های جدید هنوز آپلود نشده‌اند.' : 'تغییرات ذخیره شد؛ برای نمایش در سایت «انتشار تغییرات» را بزن.');
-  }
-  function tab(id) {
-    document.querySelectorAll('.tab').forEach(section => { section.hidden = section.id !== id; });
-    document.querySelectorAll('.nav').forEach(item => item.classList.toggle('active',item.dataset.tab === id));
-    $('#pageTitle').textContent = titles[id];
-  }
-  document.querySelectorAll('[data-tab],[data-goto]').forEach(el => el.onclick = () => tab(el.dataset.tab || el.dataset.goto));
-  function mediaURL(path) {
-    if (!path || !core.safeURL(path)) return '';
-    return previews.get(path) || (/^https:\/\//.test(path) ? path : new URL('../'+path,location.href).href);
-  }
-  function image(path, title, className) {
-    const img = element('img',undefined,className); img.alt = title; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; img.src = mediaURL(path);
-    img.onerror = () => { img.replaceWith(element('div','◇',className)); };
-    return img;
-  }
-  function allProjects() { return data.categories.flatMap(c => c.projects.map(p => ({category:c,project:p}))); }
-  function fillCategories() {
-    for (const select of [$('#categoryFilter'),$('#projectForm').elements.category]) {
-      const value = select.value; select.replaceChildren();
-      if (select.id === 'categoryFilter') select.add(new Option('همه دسته‌ها',''));
-      data.categories.forEach(c => select.add(new Option(c.title,c.id)));
-      select.value = value || (select.id === 'categoryFilter' ? '' : data.categories[0].id);
-    }
-  }
-  function renderProjects() {
-    const entries = allProjects();
-    $('#totalCount').textContent = entries.length.toLocaleString('fa');
-    $('#publishedCount').textContent = entries.filter(x => x.project.status !== 'draft').length.toLocaleString('fa');
-    $('#draftCount').textContent = entries.filter(x => x.project.status === 'draft').length.toLocaleString('fa');
-    const query = $('#search').value.trim().toLowerCase(), categoryId = $('#categoryFilter').value;
-    const list = $('#projectList'); list.replaceChildren();
-    entries.filter(({category,project}) => (!categoryId || category.id === categoryId) && (project.title+' '+project.type).toLowerCase().includes(query)).forEach(({category,project}) => {
-      const card = element('article',undefined,'project-card');
-      card.append(project.image ? image(project.image,project.title,'project-art') : element('div','◇','project-art'));
-      const body = element('div',undefined,'project-body');
-      body.append(element('span',project.status === 'draft' ? 'پیش‌نویس' : project.demo ? 'نمونه نمایشی' : 'در سایت','tag'),element('h3',project.title),element('p',category.title+' / '+project.year,'muted'));
-      const actions = element('div',undefined,'actions');
-      actions.append(button('ویرایش',() => openEditor(category.id,project.id)),button('کپی',() => {
-        const copy = core.clone(project); copy.id = 'project-'+crypto.randomUUID(); copy.title += ' — Copy'; copy.status = 'draft'; category.projects.push(copy); markDirty(); renderProjects();
-      }));
-      const index = category.projects.indexOf(project);
-      const move = delta => { const next = index+delta; [category.projects[index],category.projects[next]] = [category.projects[next],category.projects[index]]; markDirty(); renderProjects(); };
-      const up = button('↑',() => move(-1)); up.disabled = index === 0; up.setAttribute('aria-label','انتقال پروژه به بالا');
-      const down = button('↓',() => move(1)); down.disabled = index === category.projects.length-1; down.setAttribute('aria-label','انتقال پروژه به پایین');
-      actions.append(up,down,button('حذف',() => {
-        if (!confirm('«'+project.title+'» به سطل زباله منتقل شود؟')) return;
-        category.projects.splice(index,1); data.trash.push({categoryId:category.id,project,deletedAt:new Date().toISOString()}); markDirty(); renderProjects();
-      },'danger'));
-      body.append(actions); card.append(body); list.append(card);
-    });
-    if (!list.childElementCount) list.append(element('p','پروژه‌ای برای نمایش وجود ندارد.','muted'));
-    $('#trashCount').textContent = '('+data.trash.length.toLocaleString('fa')+')';
-    $('#trashList').replaceChildren();
-    data.trash.forEach((entry,index) => {
-      const row = element('div',undefined,'trash-row'); row.append(element('span',entry.project.title),button('بازیابی',() => {
-        const category = data.categories.find(c => c.id === entry.categoryId);
-        if (!category) return;
-        category.projects.push(entry.project); data.trash.splice(index,1); markDirty(); renderProjects();
-      })); $('#trashList').append(row);
-    });
-  }
-  function references(path) {
-    return data.settings.heroVideo === path || [...allProjects().map(x=>x.project),...data.trash.map(x=>x.project)].some(p => p.image === path || (p.referenceImages || []).includes(path));
-  }
-  function renderMedia() {
-    $('#mediaList').replaceChildren();
-    data.media.forEach(media => {
-      const card = element('article',undefined,'media-card');
-      card.append(media.kind === 'hero' ? element('div','ویدیوی هدر','project-art') : image(media.path,media.name));
-      card.append(element('p',media.name),element('p',media.path),element('span',uploads.has(media.path) ? 'آماده آپلود' : 'ذخیره‌شده','tag'));
-      const actions = element('div',undefined,'actions');
-      actions.append(button('کپی مسیر',() => run(async () => { await navigator.clipboard.writeText(media.path); status('مسیر فایل کپی شد.'); })),button('حذف',() => {
-        if (references(media.path)) { status('این فایل در یک پروژه، سطل زباله یا هدر استفاده شده است. ابتدا آن ارجاع را تغییر بده.',true); return; }
-        if (!confirm('این فایل از گیت‌هاب حذف شود؟ حذف با انتشار تغییرات انجام می‌شود.')) return;
-        if (uploads.has(media.path)) uploads.delete(media.path); else deletions.add(media.path);
-        if (previews.has(media.path)) { URL.revokeObjectURL(previews.get(media.path)); previews.delete(media.path); }
-        data.media = data.media.filter(m => m.path !== media.path); markDirty(); renderMedia();
-      },'danger')); card.append(actions); $('#mediaList').append(card);
-    });
-    if (!data.media.length) $('#mediaList').append(element('p','هنوز عکسی از طریق پنل اضافه نشده است. تصاویر اصلی طراحی سایت دست‌نخورده می‌مانند.','muted'));
-  }
-  function renderSettings() {
-    const form = $('#settingsForm');
-    Object.entries(data.settings).forEach(([key,value]) => { if (form.elements[key]) form.elements[key].value = value; });
-    const id = data.settings.analyticsId;
-    $('#analyticsState').textContent = id ? 'شناسه تنظیم‌شده: '+id+' — ثبت داده به انتشار تنظیمات و اجازه بازدیدکننده بستگی دارد.' : 'آمارگیر هنوز متصل نشده. شناسه حساب خودت را در تنظیمات وارد کن.';
-    $('#analyticsLink').href = /^\d+$/.test(data.settings.analyticsProperty) ? 'https://analytics.google.com/analytics/web/#/p'+data.settings.analyticsProperty+'/reports/intelligenthome' : 'https://analytics.google.com/';
-  }
-  function renderAll() { fillCategories(); renderProjects(); renderMedia(); renderSettings(); }
-  function coverPreview() {
-    const url = mediaURL($('#projectForm').elements.image.value.trim());
-    $('#coverPreview').hidden = !url;
-    if (url) $('#coverPreview').src = url; else $('#coverPreview').removeAttribute('src');
-  }
-  function openEditor(categoryId, id) {
-    const form = $('#projectForm'); form.reset(); $('#editorError').textContent = '';
-    const category = data.categories.find(c => c.id === categoryId) || data.categories[0];
-    const p = category.projects.find(p => p.id === id);
-    editing = p ? {categoryId:category.id,id:p.id} : null;
-    $('#editorTitle').textContent = p ? 'ویرایش پروژه' : 'پروژه جدید';
-    form.elements.category.value = category.id;
-    form.elements.year.value = String(new Date().getFullYear());
-    if (p) {
-      for (const key of ['title','type','year','summary','challenge','image','video','projectUrl','references']) form.elements[key].value = p[key] || '';
-      form.elements.status.value = p.status || 'published';
-      form.elements.tools.value = p.tools.join(', '); form.elements.process.value = p.process.join('\n');
-      form.elements.referenceImages.value = (p.referenceImages || []).join('\n'); form.elements.demo.checked = !!p.demo;
-    }
-    $('#coverPicker').replaceChildren(new Option('انتخاب عکس…',''));
-    data.media.filter(m => m.kind !== 'hero').forEach(m => $('#coverPicker').add(new Option(m.name,m.path)));
-    coverPreview(); $('#editor').showModal();
-  }
-  $('#newProject').onclick = () => { if (!busy) openEditor(); };
-  $('#closeEditor').onclick = () => $('#editor').close();
-  $('#projectForm').elements.image.addEventListener('input',coverPreview);
-  $('#coverPicker').onchange = event => { if (event.target.value) { $('#projectForm').elements.image.value = event.target.value; coverPreview(); } };
-  $('#projectForm').onsubmit = event => {
-    event.preventDefault(); if (busy) return;
-    try {
-      const form = event.target, next = core.clone(data), category = next.categories.find(c => c.id === form.elements.category.value);
-      const oldCategory = editing && next.categories.find(c => c.id === editing.categoryId);
-      const old = oldCategory?.projects.find(p => p.id === editing.id);
-      const project = {...(old || {}),id:old?.id || 'project-'+crypto.randomUUID()};
-      for (const key of ['title','type','year','summary','challenge','image','video','projectUrl','references','status']) project[key] = form.elements[key].value.trim();
-      project.tools = form.elements.tools.value.split(/[,،]/).map(x=>x.trim()).filter(Boolean);
-      project.process = form.elements.process.value.split('\n').map(x=>x.trim()).filter(Boolean);
-      project.referenceImages = form.elements.referenceImages.value.split('\n').map(x=>x.trim()).filter(Boolean);
-      project.demo = form.elements.demo.checked;
-      if (old && oldCategory === category) category.projects.splice(category.projects.indexOf(old),1,project);
-      else { if (old) oldCategory.projects.splice(oldCategory.projects.indexOf(old),1); category.projects.push(project); }
-      core.validate(next); data = next; markDirty(); renderProjects(); $('#editor').close();
-    } catch (error) { $('#editorError').textContent = error.message; }
-  };
-  async function addFile(file, kind = 'image') {
-    if (!file) return null;
-    const ext = file.name.split('.').pop().toLowerCase();
-    const types = kind === 'hero' ? {mp4:'video/mp4',webm:'video/webm'} : {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',avif:'image/avif'};
-    if (!types[ext] || file.type !== types[ext]) throw new Error('نوع فایل مجاز نیست. برای پروژه‌ها عکس و لینک یوتیوب استفاده کن.');
-    if (file.size > (kind === 'hero' ? 20 : 8)*1024*1024) throw new Error(kind === 'hero' ? 'ویدیوی هدر باید کمتر از ۲۰ مگابایت باشد.' : 'عکس باید کمتر از ۸ مگابایت باشد.');
-    if ([...uploads.values()].reduce((sum,f)=>sum+f.size,0)+file.size > 40*1024*1024) throw new Error('ابتدا فایل‌های انتخاب‌شده را منتشر کن؛ حداکثر حجم هر نوبت ۴۰ مگابایت است.');
-    if (kind === 'image') { const bitmap = await createImageBitmap(file); bitmap.close(); }
-    const path = 'assets/uploads/'+crypto.randomUUID()+'.'+ext;
-    uploads.set(path,file); previews.set(path,URL.createObjectURL(file));
-    data.media.push({path,name:file.name,size:file.size,kind});
-    markDirty(); renderMedia(); return path;
-  }
-  $('#mediaUpload').onchange = event => run(async () => { for (const file of event.target.files) await addFile(file); event.target.value = ''; });
-  $('#coverUpload').onchange = event => run(async () => {
-    const path = await addFile(event.target.files[0]); if (path) { $('#projectForm').elements.image.value = path; coverPreview(); } event.target.value = '';
-  });
-  $('#heroUpload').onchange = event => run(async () => {
-    const path = await addFile(event.target.files[0],'hero');
-    if (path) { data.settings.heroVideo = path; $('#settingsForm').elements.heroVideo.value = path; markDirty(); } event.target.value = '';
-  });
-  $('#settingsForm').onsubmit = event => { event.preventDefault(); if (busy) return; run(() => {
-    const next = core.clone(data);
-    for (const key of Object.keys(next.settings)) if (event.target.elements[key]) next.settings[key] = event.target.elements[key].value.trim();
-    core.validate(next); data = next; markDirty(); renderSettings();
-  }); };
-  $('#search').oninput = renderProjects; $('#categoryFilter').onchange = renderProjects;
-  $('#connectionForm').onsubmit = event => { event.preventDefault(); if (busy) return; run(async () => {
-    if (dirty && !confirm('خواندن نسخه گیت‌هاب جای ویرایش فعلی را می‌گیرد. اگر لازم است ابتدا پشتیبان بگیر. ادامه می‌دهی؟')) return;
-    const form = event.target, config = {};
-    for (const key of ['owner','repo','branch','folder']) config[key] = form.elements[key].value.trim();
-    const candidate = new core.GitHubStore(config,form.elements.token.value.trim());
-    busy = true; $('#publish').disabled = true; status('در حال اتصال و خواندن نسخه گیت‌هاب…');
-    try {
-      const remote = await candidate.read();
-      store?.clear(); store = candidate; data = remote; dirty = false;
-      uploads.clear(); deletions.clear(); previews.forEach(URL.revokeObjectURL); previews.clear();
-      form.elements.token.value = '';
-      putLocal(connectionKey,JSON.stringify(config));
-      $('#connectionBadge').textContent = 'متصل به '+config.owner+'/'+config.repo;
-      $('#setupNotice').hidden = true; renderAll();
-      $('#restoreLocal').hidden = !getLocal(localKey);
-      status('متصل شد. حالا پروژه‌ها و عکس‌ها را مدیریت کن.'); tab('projects');
-    } catch (error) { candidate.clear(); throw error; }
-    finally { busy = false; $('#publish').disabled = !store || !dirty; }
-  }); };
-  $('#disconnect').onclick = () => {
-    if (busy) return; store?.clear(); store = null; $('#connectionForm').elements.token.value = ''; $('#connectionBadge').textContent = 'اتصال قطع شد'; $('#publish').disabled = true; status('کلید دسترسی از حافظه این صفحه پاک شد.');
-  };
-  $('#publish').onclick = () => run(async () => {
-    if (!store || busy || !dirty) return;
-    core.validate(data);
-    if (!confirm('تغییرات پروژه‌ها و فایل‌ها در گیت‌هاب ذخیره و برای انتشار سایت ارسال شوند؟')) return;
-    busy = true; $('#publish').disabled = true;
-    // Prevent changes to the working copy while its files are committing.
-    document.querySelectorAll('main input,main textarea,main select,main button').forEach(el => { el.dataset.wasDisabled = String(el.disabled); el.disabled = true; });
-    try {
-      await store.publish(core.clone(data),new Map(uploads),new Set(deletions),status);
-      uploads.clear(); deletions.clear(); dirty = false; clearLocal(localKey); $('#restoreLocal').hidden = true;
-      renderMedia(); status('تغییرات در گیت‌هاب ثبت شد. انتشار سایت معمولاً کمی زمان می‌برد؛ برای بررسی، «مشاهده سایت» را باز کن.');
-    } finally {
-      busy = false;
-      document.querySelectorAll('[data-was-disabled]').forEach(el => { el.disabled = el.dataset.wasDisabled === 'true'; delete el.dataset.wasDisabled; });
-      $('#publish').disabled = !dirty;
-    }
-  });
-  $('#export').onclick = () => {
-    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}), url = URL.createObjectURL(blob);
-    const link = element('a'); link.href = url; link.download = 'portfolio-backup-'+new Date().toISOString().slice(0,10)+'.json'; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
-    if (uploads.size) status('پشتیبان فقط شامل اطلاعات است. فایل‌های انتخاب‌شده را پیش از خروج منتشر کن.',true);
-  };
-  $('#restoreLocal').onclick = () => run(() => {
-    const saved = JSON.parse(getLocal(localKey) || 'null');
-    if (!saved) throw new Error('ویرایش ذخیره‌شده‌ای پیدا نشد.');
-    if ((saved.repo || null) !== (getLocal(connectionKey) || null) || (store && saved.base && saved.base !== store.base)) throw new Error('این ویرایش برای نسخه یا مخزن دیگری است؛ برای جلوگیری از جایگزینی اشتباه بازیابی نشد.');
-    if (!confirm('ویرایش ذخیره‌شده مرورگر بازیابی شود؟')) return;
-    data = core.validate(saved.data); deletions.clear(); (saved.deletions || []).forEach(path=>deletions.add(path)); markDirty(); renderAll();
-  });
-  addEventListener('beforeunload',event => { if (dirty || busy) { event.preventDefault(); event.returnValue = ''; } });
-  run(async () => {
-    const response = await fetch('../data/content.json',{cache:'no-store'});
-    if (!response.ok) throw new Error('فایل اطلاعات پیدا نشد. پنل را از آدرس سایت باز کن، نه با دوبار کلیک روی فایل.');
-    data = core.validate(await response.json()); renderAll();
-    const config = JSON.parse(getLocal(connectionKey) || 'null');
-    if (config) for (const key of ['owner','repo','branch','folder']) $('#connectionForm').elements[key].value = config[key] || '';
-    $('#restoreLocal').hidden = !getLocal(localKey);
-    status('اطلاعات سایت آماده است.');
-  });
-})();
+import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js';
+import {githubClient} from './github.js';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let content,baseline='',dirty=false,collectionId='video',projectId='',client=null,head='',saving=Promise.resolve(),saveTimer,busy=false;
+const newId=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
+const category=()=>content.collections.find(c=>c.id===collectionId),project=()=>category()?.projects.find(p=>p.id===projectId);
+function notify(message,error=false){$('#notice').hidden=false;$('#notice').classList.toggle('error',error);$('#notice').textContent=message}
+function status(message){$('#save-state').textContent=message}
+function persist(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>flush(),250)}
+async function flush(){clearTimeout(saveTimer);const snapshot={content:structuredClone(content),baseline,dirty,updatedAt:Date.now()};saving=saving.catch(()=>{}).then(()=>saveDraft(snapshot));try{await saving;status(dirty?'پیش‌نویس ذخیره شد':'مطابق نسخهٔ منتشرشده')}catch{status('ذخیره نشد');notify('فضای مرورگر کافی نیست. پیش از بستن صفحه فایل پشتیبان را دانلود کنید.',true)}}
+function changed(){dirty=true;status('در حال ذخیرهٔ پیش‌نویس…');$('#publish').disabled=false;persist()}
+function showView(view){$$('.view').forEach(el=>el.hidden=el.id!=='view-'+view);$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));$('#view-title').textContent={projects:'پروژه‌ها',settings:'تنظیمات و انتشار',stats:'آمار بازدید'}[view];if(view==='settings')renderSettings();if(view==='stats')renderStats()}
+$$('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+function confirmAction(title,description,label='تأیید'){return new Promise(resolve=>{const d=$('#confirm-dialog');$('#confirm-title').textContent=title;$('#confirm-description').textContent=description;$('#confirm-action').textContent=label;d.returnValue='cancel';d.addEventListener('close',()=>resolve(d.returnValue==='confirm'),{once:true});d.showModal()})}
+function projectCover(p){return assetURL(p.cover)||assetURL(p.media.find(m=>m.type==='image')?.src)||assetURL(category().image)}
+function renderList(){if(!content)return;$('#category-tabs').innerHTML=content.collections.map(c=>`<button data-category="${esc(c.id)}" class="${c.id===collectionId?'active':''}">${esc(c.title)}</button>`).join('');$('#project-list').innerHTML=category().projects.map(p=>`<button class="project-item ${p.id===projectId?'active':''}" data-project="${esc(p.id)}"><img src="${esc(projectCover(p))}" alt=""><span dir="auto">${esc(p.title||'پروژهٔ بدون عنوان')}<small>${p.published?'نمایش در سایت':'پنهان از سایت'} · ${p.media.length} رسانه</small></span></button>`).join('')||'<p class="help">هنوز پروژه‌ای در این دسته نیست. با «پروژهٔ جدید» شروع کنید.</p>'}
+function field(label,name,value,textarea=false){return `<label>${label}${textarea?`<textarea data-project-field="${name}" dir="auto" rows="3">${esc(value)}</textarea>`:`<input data-project-field="${name}" dir="auto" value="${esc(value)}">`}</label>`}
+function renderEditor(){renderList();const p=project();if(!p){$('#editor').innerHTML='<div class="empty-state"><b>یک پروژه انتخاب کنید.</b><p>یا اولین پروژهٔ این دسته را بسازید.</p></div>';return}
+ $('#editor').innerHTML=`<div class="editor-top"><div><h2 dir="auto">${esc(p.title||'پروژهٔ جدید')}</h2><small>${esc(category().title)}</small></div><div class="editor-actions"><button class="text-button" data-action="duplicate">کپی</button><button class="text-button danger" data-action="delete">حذف پروژه</button></div></div><div class="two-fields">${field('نام پروژه','title',p.title)}${field('نوع پروژه (اختیاری)','kind',p.kind)}</div>${field('معرفی کوتاه (اختیاری)','subtitle',p.subtitle,true)}<div class="two-fields"><label>دسته‌بندی<select id="project-category">${content.collections.map(c=>`<option value="${esc(c.id)}" ${c.id===collectionId?'selected':''}>${esc(c.title)}</option>`).join('')}</select></label><label class="check"><input data-project-field="published" type="checkbox" ${p.published?'checked':''}>نمایش در سایت</label></div><div class="button-row"><button class="secondary" data-action="project-up">جلوتر در گالری</button><button class="secondary" data-action="project-down">عقب‌تر در گالری</button></div>
+ <section class="editor-section"><div class="section-title"><h3>آلبوم پروژه</h3><span class="pill">${p.media.length} رسانه</span></div><p class="help">عکس‌ها و ویدیوها در یک اسلایدر حلقه‌ای نمایش داده می‌شوند. ترتیب را با فلش‌ها تغییر دهید؛ یک عکس را به‌عنوان کاور انتخاب کنید.</p><div class="button-row"><label class="upload-button">＋ آپلود عکس<input type="file" id="image-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple></label><button class="secondary" data-action="add-media">＋ لینک یوتیوب یا عکس</button></div><div class="media-list">${p.media.map((m,i)=>`<article class="media-item"><div class="media-thumb"><img src="${esc(m.type==='youtube'?`https://i.ytimg.com/vi/${youtubeId(m.src)}/hqdefault.jpg`:assetURL(m.src))}" alt=""><b>${m.type==='youtube'?'YouTube':i+1}</b></div><div class="media-details"><label>زیرنویس<input data-scope="media" data-index="${i}" data-field="caption" value="${esc(m.caption)}" dir="auto"></label><label>توضیح تصویر<input data-scope="media" data-index="${i}" data-field="alt" value="${esc(m.alt)}" dir="auto"></label><div class="mini-actions"><button data-action="media-up" data-index="${i}" aria-label="رسانهٔ ${i+1} جلوتر" ${i===0?'disabled':''}>↑</button><button data-action="media-down" data-index="${i}" aria-label="رسانهٔ ${i+1} عقب‌تر" ${i===p.media.length-1?'disabled':''}>↓</button>${m.type==='image'?`<button data-action="cover" data-index="${i}" class="cover-button">${p.cover===m.src?'✓ کاور':'انتخاب کاور'}</button>`:''}<button class="danger" data-action="media-delete" data-index="${i}" aria-label="حذف رسانهٔ ${i+1}">×</button></div></div></article>`).join('')}</div></section>
+ <section class="editor-section"><div class="section-title"><h3>اطلاعات کوتاه</h3><button class="secondary" data-action="add-fact">＋ فیلد</button></div><p class="help">اختیاری؛ مانند مشتری، سال، نقش یا هر عنوان دیگری.</p>${p.facts.map((f,i)=>`<div class="fact-row"><input aria-label="عنوان اطلاعات ${i+1}" data-scope="facts" data-index="${i}" data-field="label" value="${esc(f.label)}" placeholder="عنوان" dir="auto"><input aria-label="مقدار اطلاعات ${i+1}" data-scope="facts" data-index="${i}" data-field="value" value="${esc(f.value)}" placeholder="مقدار" dir="auto"><button data-action="fact-delete" data-index="${i}" aria-label="حذف اطلاعات ${i+1}">×</button></div>`).join('')}</section>
+ <section class="editor-section"><div class="section-title"><h3>توضیحات و بخش‌های دلخواه</h3><button class="secondary" data-action="add-section">＋ بخش جدید</button></div><p class="help">هر تعداد بخش با عنوان دلخواه اضافه کنید. عنوان می‌تواند خالی باشد. متن ساده، لیست، تیتر و نوشتهٔ برجسته پشتیبانی می‌شود.</p>${p.sections.map((s,i)=>`<article class="block"><div class="block-head"><small>بخش ${i+1}</small><div class="mini-actions"><button data-action="section-up" data-index="${i}" aria-label="بخش ${i+1} بالاتر" ${i===0?'disabled':''}>↑</button><button data-action="section-down" data-index="${i}" aria-label="بخش ${i+1} پایین‌تر" ${i===p.sections.length-1?'disabled':''}>↓</button><button class="danger" data-action="section-delete" data-index="${i}" aria-label="حذف بخش ${i+1}">حذف</button></div></div><label>عنوان (اختیاری)<input data-scope="sections" data-index="${i}" data-field="heading" value="${esc(s.heading)}" dir="auto"></label><div class="formatting"><button data-format="bold" data-index="${i}">Bold</button><button data-format="list" data-index="${i}">• فهرست</button><button data-format="heading" data-index="${i}">تیتر</button></div><label>متن<textarea id="section-body-${i}" data-scope="sections" data-index="${i}" data-field="body" rows="6" dir="auto">${esc(s.body)}</textarea></label></article>`).join('')}</section>`;
+}
+$('#category-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(!b)return;collectionId=b.dataset.category;projectId=category().projects[0]?.id||'';renderEditor()});
+$('#project-list').addEventListener('click',e=>{const b=e.target.closest('[data-project]');if(b){projectId=b.dataset.project;renderEditor()}});
+$('#editor').addEventListener('input',e=>{const el=e.target,p=project();if(!p)return;if(el.dataset.projectField){p[el.dataset.projectField]=el.type==='checkbox'?el.checked:el.value;if(el.dataset.projectField==='title')$('.editor-top h2').textContent=el.value;renderList();changed()}else if(el.dataset.scope){p[el.dataset.scope][Number(el.dataset.index)][el.dataset.field]=el.value;changed()}});
+$('#editor').addEventListener('change',async e=>{try{if(e.target.id==='project-category'){const p=project(),old=category();old.projects=old.projects.filter(x=>x.id!==p.id);collectionId=e.target.value;category().projects.push(p);changed();renderEditor()}if(e.target.id==='image-files'){const p=project();status('در حال آماده‌سازی عکس‌ها…');for(const file of e.target.files){const src=await imageData(file);p.media.push({type:'image',src,alt:p.title,caption:''});if(!p.cover)p.cover=src}changed();renderEditor()}}catch(err){notify(err.message,true)}});
+const move=(list,index,delta)=>{const next=index+delta;if(next<0||next>=list.length)return;[list[index],list[next]]=[list[next],list[index]]};
+$('#editor').addEventListener('click',async e=>{const button=e.target.closest('button'),p=project();if(!button||!p)return;const a=button.dataset.action,i=Number(button.dataset.index);
+ if(button.dataset.format){const area=$('#section-body-'+i),start=area.selectionStart,end=area.selectionEnd,selection=area.value.slice(start,end),style=button.dataset.format;const replacement=style==='bold'?`**${selection||'متن'}**`:style==='list'?'\n- '+(selection||'مورد جدید'):'\n### '+(selection||'عنوان');area.setRangeText(replacement,start,end,'select');p.sections[i].body=area.value;area.focus();changed();return}
+ if(a==='delete'){if(!await confirmAction('حذف پروژه؟','این پروژه از پیش‌نویس حذف می‌شود. تا انتشار، نسخهٔ سایت تغییری نمی‌کند.','حذف پروژه'))return;category().projects=category().projects.filter(x=>x.id!==p.id);projectId=category().projects[0]?.id||''}
+ else if(a==='duplicate'){const copy=structuredClone(p);copy.id='p-'+newId();copy.title=p.title+' — Copy';copy.published=false;category().projects.push(copy);projectId=copy.id}
+ else if(a==='project-up'||a==='project-down')move(category().projects,category().projects.indexOf(p),a==='project-up'?-1:1);
+ else if(a==='add-media'){openMedia();return}
+ else if(a==='add-section')p.sections.push({heading:'',body:''});
+ else if(a==='add-fact')p.facts.push({label:'',value:''});
+ else if(a==='fact-delete')p.facts.splice(i,1);
+ else if(a==='section-delete'){if(!await confirmAction('حذف این بخش؟','متن این بخش از پیش‌نویس حذف می‌شود.','حذف بخش'))return;p.sections.splice(i,1)}
+ else if(a==='section-up'||a==='section-down')move(p.sections,i,a==='section-up'?-1:1);
+ else if(a==='media-up'||a==='media-down')move(p.media,i,a==='media-up'?-1:1);
+ else if(a==='cover')p.cover=p.media[i].src;
+ else if(a==='media-delete'){if(!await confirmAction('حذف رسانه؟','این عکس یا ویدیو از آلبوم حذف می‌شود.','حذف رسانه'))return;const removed=p.media.splice(i,1)[0];if(p.cover===removed.src)p.cover=p.media.find(m=>m.type==='image')?.src||''}
+ else return;changed();renderEditor();
+});
+$('#add-project').addEventListener('click',()=>{const p={id:'p-'+newId(),title:'New project',subtitle:'',kind:'',published:false,cover:'',media:[],facts:[],sections:[{heading:'',body:''}]};category().projects.push(p);projectId=p.id;changed();renderEditor();$('#editor input').focus()});
+function openMedia(){$('#media-form').reset();$('#media-error').textContent='';$('#media-dialog').showModal()}
+$('[data-close-media]').addEventListener('click',()=>$('#media-dialog').close());
+$('#media-form').addEventListener('submit',e=>{e.preventDefault();const type=$('#media-type').value,src=$('#media-url').value.trim();if(type==='youtube'?!youtubeId(src):!safeAsset(src)){$('#media-error').textContent=type==='youtube'?'یک لینک معتبر یوتیوب وارد کنید.':'لینک عکس باید با https شروع شود.';return}const p=project();p.media.push({type,src,caption:$('#media-caption').value,alt:p.title});if(!p.cover&&type==='image')p.cover=src;changed();renderEditor();$('#media-dialog').close()});
+function readFile(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('خواندن فایل ممکن نشد.'));r.readAsDataURL(file)})}
+async function imageData(file){if(!['image/png','image/jpeg','image/webp','image/gif'].includes(file.type))throw Error('عکس باید JPG، PNG، WebP یا GIF باشد.');if(file.size>12*1024*1024)throw Error('هر عکس باید کمتر از ۱۲ مگابایت باشد.');if(file.type==='image/gif'){if(file.size>5*1024*1024)throw Error('GIF باید کمتر از ۵ مگابایت باشد.');return readFile(file)}const bitmap=await createImageBitmap(file);const scale=Math.min(1,2000/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();return canvas.toDataURL('image/webp',.88)}
+function renderSettings(){if(!content)return;const settings=content.settings;$('#hero-url').value=settings.heroVideo.startsWith('data:')?'':settings.heroVideo;$('#hero-url').placeholder=settings.heroVideo.startsWith('data:')?'فایل جدید انتخاب شده':'assets/showreel.mp4';const preview=$('#hero-preview');if(settings.heroVideo)preview.src=assetURL(settings.heroVideo,'video');else{preview.removeAttribute('src');preview.load()}$('#analytics-enabled').checked=settings.analytics.enabled;$('#website-id').value=settings.analytics.websiteId;$('#script-url').value=settings.analytics.scriptUrl}
+$('#hero-url').addEventListener('change',e=>{const value=safeAsset(e.target.value.trim(),'video');if(e.target.value.trim()&&!value){notify('آدرس ویدیو معتبر نیست.',true);return}content.settings.heroVideo=value;changed();renderSettings()});
+$('#hero-file').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{if(file.type!=='video/mp4'||file.size>15*1024*1024)throw Error('فایل باید MP4 و حداکثر ۱۵ مگابایت باشد.');const url=URL.createObjectURL(file);try{await new Promise((resolve,reject)=>{const v=document.createElement('video');v.preload='metadata';v.onloadedmetadata=()=>{const ok=Number.isFinite(v.duration)&&v.duration<=30.5;v.removeAttribute('src');v.load();ok?resolve():reject(Error('مدت ویدیو باید حداکثر ۳۰ ثانیه باشد.'))};v.onerror=()=>reject(Error('این فایل ویدیو قابل خواندن نیست.'));v.src=url})}finally{URL.revokeObjectURL(url)}content.settings.heroVideo=await readFile(file);changed();renderSettings()}catch(err){notify(err.message,true)}finally{e.target.value=''}});
+for(const [id,key] of [['analytics-enabled','enabled'],['website-id','websiteId'],['script-url','scriptUrl']])$('#'+id).addEventListener('change',e=>{content.settings.analytics[key]=e.target.type==='checkbox'?e.target.checked:e.target.value.trim();changed()});
+$('#preview').addEventListener('click',async()=>{const tab=window.open('about:blank','_blank');if(tab)tab.opener=null;await flush();if(tab)tab.location.href=new URL('./?preview=1#work',document.baseURI).href;else notify('مرورگر پنجرهٔ پیش‌نمایش را مسدود کرده است.',true)});
+function downloadJSON(){const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='rezazdl-content-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('#export').addEventListener('click',downloadJSON);
+$('#import').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>70*1024*1024)throw Error('فایل بیش از حد بزرگ است.');const imported=normalizeContent(JSON.parse(await file.text()));if(!await confirmAction('جایگزینی پیش‌نویس؟','این فایل جایگزین محتوای فعلی پنل می‌شود. نسخهٔ منتشرشده تا زدن انتشار تغییری نمی‌کند.'))return;content=imported;collectionId='video';projectId=category().projects[0]?.id||'';changed();renderEditor();renderSettings();notify('فایل وارد شد. پیش از انتشار، پیش‌نمایش را بررسی کنید.')}catch(err){notify('ورود فایل انجام نشد: '+err.message,true)}finally{e.target.value=''}});
+$('#reset-draft').addEventListener('click',async()=>{if(!await confirmAction('کنار گذاشتن پیش‌نویس؟','تغییرات منتشرنشدهٔ این مرورگر کنار گذاشته می‌شود. در صورت نیاز ابتدا فایل پشتیبان را دانلود کنید.'))return;try{if(client){const r=await client.read();content=r.content;head=r.head}else content=await loadPublished();baseline=JSON.stringify(content);dirty=false;await clearDraft();collectionId='video';projectId=category().projects[0]?.id||'';renderEditor();renderSettings();await flush();notify('نسخهٔ تازه دریافت شد.')}catch(err){notify(err.message,true)}});
+function connectionUI(on){document.body.classList.toggle('connected',on);$('#connection-state').textContent=on?'متصل به GitHub':'بدون اتصال به GitHub';$('#repo-badge').textContent=on?'متصل':'متصل نیست'}
+$('#connect-form').addEventListener('submit',async e=>{e.preventDefault();$('#connect').disabled=true;$('#connect-message').textContent='در حال اتصال…';try{const candidate=githubClient({repo:$('#repo').value,branch:$('#branch').value,root:$('#content-root').value,token:$('#token').value});const remote=await candidate.read();if(dirty&&JSON.stringify(remote.content)!==baseline)throw Error('محتوای مخزن با نسخهٔ پایهٔ پیش‌نویس شما متفاوت است. فایل پشتیبان بگیرید، پیش‌نویس را کنار بگذارید و دوباره متصل شوید.');client=candidate;head=remote.head;if(!dirty){content=remote.content;baseline=JSON.stringify(content);projectId=category().projects[0]?.id||'';renderEditor();renderSettings()}const {repo,branch,root}=client.config;localStorage.setItem('rezazdl-repo',JSON.stringify({repo,branch,root}));$('#token').value='';connectionUI(true);$('#connect-message').textContent='اتصال برقرار شد. حالا می‌توانید تغییرات را منتشر کنید.';await flush()}catch(err){$('#connect-message').textContent=err.message;notify(err.message,true)}finally{$('#connect').disabled=false}});
+$('#disconnect').addEventListener('click',()=>{client=null;head='';$('#token').value='';connectionUI(false);$('#connect-message').textContent='توکن از حافظهٔ پنل حذف شد.'});
+$('#publish').addEventListener('click',async()=>{if(busy)return;if(!client){showView('settings');notify('برای انتشار، ابتدا اتصال GitHub را کامل کنید. پیش‌نویس شما ذخیره شده است.');$('#repo').focus();return}try{const checked=normalizeContent(content);for(const c of checked.collections)for(const p of c.projects){if(!p.title.trim())throw Error('نام تمام پروژه‌ها را وارد کنید.');if(p.published&&!p.media.some(m=>m.src))throw Error(`پروژهٔ «${p.title}» هنوز رسانه ندارد. یک عکس یا ویدیو اضافه کنید یا نمایش آن را غیرفعال کنید.`)}const a=checked.settings.analytics;if(a.enabled&&(!httpsURL(a.scriptUrl)||!/^[a-f0-9-]{36}$/i.test(a.websiteId)))throw Error('شناسه و آدرس اسکریپت آمار را کامل کنید یا ثبت بازدید را غیرفعال کنید.');busy=true;document.querySelector('.workspace').classList.add('busy');await flush();const result=await client.publish(checked,head,status);content=result.content;head=result.head;baseline=JSON.stringify(content);dirty=false;renderEditor();renderSettings();await flush();notify('محتوا در GitHub ذخیره شد. انتشار Pages ممکن است یکی دو دقیقه طول بکشد.');const aLink=document.createElement('a');aLink.href=result.commitURL;aLink.target='_blank';aLink.rel='noopener noreferrer';aLink.textContent=' مشاهدهٔ تغییرات ↗';$('#notice').append(aLink)}catch(err){notify(err.message,true)}finally{busy=false;document.querySelector('.workspace').classList.remove('busy')}});
+function renderStats(){const a=content.settings.analytics;$('#analytics-state').textContent=a.enabled&&a.websiteId?(dirty?'تنظیمات آمار در پیش‌نویس فعال است؛ برای اعمال، منتشر کنید.':'ثبت بازدید در تنظیمات فعال است. آمار از زمان اتصال سرویس جمع می‌شود.'):'ثبت بازدید هنوز فعال نشده است. از بخش تنظیمات شروع کنید.';const url=localStorage.getItem('rezazdl-dashboard')||'';$('#dashboard-url').value=url;setDashboard(url)}
+function setDashboard(value){const url=httpsURL(value);$('#analytics-frame').hidden=!url;$('#analytics-empty').hidden=!!url;$('#open-dashboard').hidden=!url;if(url){$('#analytics-frame').src=url;$('#open-dashboard').href=url}else{$('#analytics-frame').removeAttribute('src');$('#open-dashboard').removeAttribute('href')}}
+$('#show-dashboard').addEventListener('click',()=>{const url=httpsURL($('#dashboard-url').value.trim());if(!url){notify('لینک https اشتراک داشبورد Umami را وارد کنید.',true);return}localStorage.setItem('rezazdl-dashboard',url);setDashboard(url)});
+$('#remove-dashboard').addEventListener('click',()=>{localStorage.removeItem('rezazdl-dashboard');$('#dashboard-url').value='';setDashboard('')});
+window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue=''}});
+try{const published=await loadPublished(),draft=await readDraft().catch(()=>null);content=draft?.content?normalizeContent(draft.content):published;baseline=draft?.baseline||JSON.stringify(published);dirty=draft?.dirty===true;projectId=category().projects[0]?.id||'';const config=JSON.parse(localStorage.getItem('rezazdl-repo')||'null');if(config){$('#repo').value=config.repo||'';$('#branch').value=config.branch||'main';$('#content-root').value=config.root??''}renderEditor();renderSettings();status(dirty?'پیش‌نویس قبلی بازیابی شد':'مطابق نسخهٔ منتشرشده');$('#add-project').disabled=false;$('#preview').disabled=false;$('#publish').disabled=false}catch(err){notify(err.message,true);status('دریافت محتوا ناموفق بود');$('#editor').textContent='محتوا بارگذاری نشد. صفحه را دوباره باز کنید.'}
