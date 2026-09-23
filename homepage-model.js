@@ -1,5 +1,10 @@
 // Shared, HTML-free editing schema for the home page.
 export const HOME_FIELDS=[
+  {group:'contact',key:'formEndpoint',label:'آدرس فرم Formspree (ایمیل مقصد در Formspree تنظیم می‌شود)',default:'',selector:'',kind:'link',attr:''},
+  {group:'form',key:'emailSending',label:'پیام در حال ارسال',default:'Sending your message…',selector:'',kind:'text',attr:''},
+  {group:'form',key:'emailSent',label:'پیام ارسال موفق',default:'Thanks! Your message has been submitted. I’ll get back to you soon.',selector:'',kind:'text',attr:''},
+  {group:'form',key:'emailError',label:'پیام خطای ارسال',default:'Your message could not be sent. Please try again or use another contact option.',selector:'',kind:'text',attr:''},
+  {group:'form',key:'emailLimit',label:'پیام محدودیت ارسال',default:'The contact form is temporarily unavailable. Please try again later or use another contact option.',selector:'',kind:'text',attr:''},
   {
     "group": "identity",
     "key": "pageTitle",
@@ -732,9 +737,11 @@ export function normalizeHome(raw={},asset=v=>v){
   if(f.kind==='email'&&home[f.key]&&!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(home[f.key]))home[f.key]='';
   if(f.kind==='link'&&home[f.key]){try{const url=new URL(home[f.key],'https://example.invalid/');if(url.protocol!=='https:'||url.username||url.password)home[f.key]=''}catch{home[f.key]=''}}
  }
+ if(home.formEndpoint&&!/^https:\/\/formspree\.io\/f\/[a-zA-Z0-9]+$/.test(home.formEndpoint))home.formEndpoint='';
  home.visibility=Object.fromEntries(HOME_SECTIONS.map(s=>[s.id,raw?.visibility?.[s.id]!==false]));
  const valid=HOME_SECTIONS.map(s=>s.id);
  home.order=[...new Set([...(Array.isArray(raw?.order)?raw.order:[]).filter(id=>valid.includes(id)&&id!=='hero'),...valid.filter(id=>id!=='hero')])];
  home.extraSections=(Array.isArray(raw?.extraSections)?raw.extraSections:[]).slice(0,30).map((s,i)=>({id:'extra-'+i,title:String(s.title??'').slice(0,300),body:String(s.body??'').slice(0,20000),image:asset(s.image||''),alt:String(s.alt??'').slice(0,300),visible:s.visible!==false}));
  return home;
 }
+

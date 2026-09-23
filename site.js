@@ -1,6 +1,7 @@
-import {installImageRecovery} from './image-loading.js?v=20260923-images3';
-import {applyHome,homeText} from './homepage.js?v=20260923-images3';
-import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-images3';
+import {installContactForm} from './contact-form.js?v=20260923-forms4';
+import {installImageRecovery} from './image-loading.js?v=20260923-forms4';
+import {applyHome,homeText} from './homepage.js?v=20260923-forms4';
+import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-forms4';
 document.documentElement.classList.add('js');
 installImageRecovery(document);
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], reduce=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:650px)'),clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)),ease=x=>x*x*(3-2*x);
@@ -101,8 +102,7 @@ const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isInte
 if(matchMedia('(pointer:fine)').matches){cards.forEach(c=>{c.addEventListener('pointermove',e=>{if(!motion)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.querySelector('img').style.transform=`scale(1.07) translate(${-x*9}px,${-y*9}px)`});c.addEventListener('pointerleave',()=>c.querySelector('img').style.transform='')})}
 $$('dialog').forEach(d=>{d.querySelector('[data-close]')?.addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()});d.addEventListener('close',()=>{document.body.classList.toggle('locked',!!$('dialog[open]'));syncPlayback()})});
 $$('[data-contact="Email"]').forEach(b=>b.addEventListener('click',()=>{const d=$('#contact-dialog');d.showModal();document.body.classList.add('locked');syncPlayback()}));
-const emailForm=$('#email-form');
-if(emailForm){const recipient=()=>emailForm.dataset.recipient?.trim();const submit=emailForm.querySelector('[type="submit"]'),status=$('#email-status');if(recipient()){submit.disabled=false;status.textContent='Your message will open in your email app. Nothing is sent automatically.'}emailForm.addEventListener('submit',e=>{e.preventDefault();if(!recipient()||!emailForm.reportValidity())return;const fields=new FormData(emailForm);const body=`${fields.get('message')}\n\nFrom: ${fields.get('name')}\nReply to: ${fields.get('email')}`;location.href=`mailto:${encodeURIComponent(recipient())}?subject=${encodeURIComponent(fields.get('subject'))}&body=${encodeURIComponent(body)}`;status.textContent=homeText('emailOpened')})}
+installContactForm($('#email-form'),homeText);
 // Editable collections and mixed-media albums.
 const collectionDialog=$('#collection-dialog'),projectDialog=$('#project-dialog');
 let collections=[],activeCollection=null,activeProject=null,albumIndex=0;
@@ -159,4 +159,5 @@ $('#back-to-gallery')?.addEventListener('click',()=>projectDialog.close());
 $('#project-content')?.addEventListener('click',e=>{if(e.target.closest('[data-return-gallery]'))projectDialog.close();const slide=e.target.closest('[data-slide]');if(slide)stepAlbum(Number(slide.dataset.slide));const play=e.target.closest('[data-youtube]');if(play){const id=play.dataset.youtube;if(!/^[\w-]{11}$/.test(id))return;$('#album-stage').innerHTML=`<iframe title="${escapeHTML(activeProject.title)} — YouTube video" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;track('play-project-video',{project:activeProject.id})}});
 projectDialog?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;e.preventDefault();stepAlbum(e.key==='ArrowLeft'?-1:1)}});
 projectDialog?.addEventListener('close',()=>{const stage=$('#album-stage');if(stage)stage.replaceChildren();activeProject=null});
+
 

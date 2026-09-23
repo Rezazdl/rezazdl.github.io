@@ -1,4 +1,4 @@
-import {normalizeHome} from './homepage-model.js?v=20260923-images3';
+import {normalizeHome} from './homepage-model.js?v=20260923-forms4';
 export const CONTENT_PATH='content/portfolio.json';
 export const DRAFT_KEY='rezazdl-content-v1';
 export const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -23,4 +23,5 @@ export async function clearDraft(){const db=await database();return new Promise(
 // A small, deliberately HTML-free Markdown renderer for editable project text.
 function inline(raw){let out=escapeHTML(raw);out=out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,label,url)=>{const decoded=url.replace(/&amp;/g,'&');try{const u=new URL(decoded);if(!['http:','https:'].includes(u.protocol))return label;return `<a href="${escapeHTML(u.href)}" target="_blank" rel="noopener noreferrer">${label}</a>`}catch{return label}});return out.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<em>$1</em>')}
 export function renderText(text){const blocks=String(text||'').replace(/\r\n/g,'\n').split(/\n\s*\n/);return blocks.filter(Boolean).map(block=>{const lines=block.split('\n');if(lines.every(l=>/^[-*] /.test(l)))return '<ul>'+lines.map(l=>'<li>'+inline(l.slice(2))+'</li>').join('')+'</ul>';if(lines.every(l=>/^\d+\. /.test(l)))return '<ol>'+lines.map(l=>'<li>'+inline(l.replace(/^\d+\. /,''))+'</li>').join('')+'</ol>';if(lines.every(l=>/^> /.test(l)))return '<blockquote>'+lines.map(l=>inline(l.slice(2))).join('<br>')+'</blockquote>';return lines.map((line,i)=>{const h=line.match(/^#{1,4}\s+(.+)/);return h?`<h4>${inline(h[1])}</h4>`:`${i&& !/^#/.test(lines[i-1])?'<br>':''}${inline(line)}`}).join('')}).map(block=>/^<(ul|ol|blockquote|h4)/.test(block)?block:`<p>${block}</p>`).join('')}
+
 

@@ -50,7 +50,7 @@
     "contactEyebrow": "Contact",
     "contactTitle": "Let’s make\nsomething ",
     "contactHighlight": "move.",
-    "email": "",
+    "email": "rezazendehdel.tr@gmail.com",
     "telegram": "https://t.me/rzazdl",
     "whatsapp": "./wa/",
     "instagram": "",
@@ -69,9 +69,9 @@
     "formPlaceholder_subject": "What are we making?",
     "formLabel_message": "Your message",
     "formPlaceholder_message": "A little about the idea, the timing, and what you have in mind.",
-    "formButton": "Prepare email ↗",
-    "formExplanation": "When connected, this opens your email app with your message ready to send.",
-    "emailReady": "Your message will open in your email app. Nothing is sent automatically.",
+    "formButton": "Send message ↗",
+    "formExplanation": "Your message is sent directly from this form. I’ll reply to the email address you provide.",
+    "emailReady": "Tell me about your project, then hit Send message.",
     "emailMissing": "Please use the contact links on this page to get in touch.",
     "emailOpened": "Your draft is ready in your email app. Review it there before sending.",
     "galleryKicker": "SELECTED WORK",
@@ -98,7 +98,8 @@
       "about",
       "contact"
     ],
-    "extraSections": []
+    "extraSections": [],
+    "formEndpoint": "https://formspree.io/f/xzezgavp"
   },
   "settings": {
     "heroVideo": "",

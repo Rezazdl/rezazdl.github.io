@@ -1,7 +1,7 @@
-import {installImageRecovery} from '../image-loading.js?v=20260923-images3';
-import {homeEditor} from './home-editor.js?v=20260923-images3';
-import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js?v=20260923-images3';
-import {githubClient} from './github.js?v=20260923-images3';
+import {installImageRecovery} from '../image-loading.js?v=20260923-forms4';
+import {homeEditor} from './home-editor.js?v=20260923-forms4';
+import {loadPublished,readDraft,saveDraft,clearDraft,normalizeContent,assetURL,youtubeId,httpsURL,safeAsset,escapeHTML as esc} from '../content-model.js?v=20260923-forms4';
+import {githubClient} from './github.js?v=20260923-forms4';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let content,baseline='',dirty=false,collectionId='video',projectId='',client=null,head='',saving=Promise.resolve(),saveTimer,busy=false;
 const newId=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -71,4 +71,5 @@ $('#show-dashboard').addEventListener('click',()=>{const url=httpsURL($('#dashbo
 $('#remove-dashboard').addEventListener('click',()=>{localStorage.removeItem('rezazdl-dashboard');$('#dashboard-url').value='';setDashboard('')});
 window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue=''}});
 try{const published=await loadPublished(),draft=await readDraft().catch(()=>null);content=draft?.content?normalizeContent(draft.content):published;baseline=draft?.baseline?JSON.stringify(normalizeContent(JSON.parse(draft.baseline))):JSON.stringify(published);dirty=draft?.dirty===true;projectId=category().projects[0]?.id||'';const config=JSON.parse(localStorage.getItem('rezazdl-repo')||'null');if(config){$('#repo').value=config.repo||'';$('#branch').value=config.branch||'main';$('#content-root').value=config.root??''}renderEditor();renderSettings();status(dirty?'پیش‌نویس قبلی بازیابی شد':'مطابق نسخهٔ منتشرشده');$('#add-project').disabled=false;$('#preview').disabled=false;$('#publish').disabled=false}catch(err){notify(err.message,true);status('دریافت محتوا ناموفق بود');$('#editor').textContent='محتوا بارگذاری نشد. صفحه را دوباره باز کنید.'}
+
 

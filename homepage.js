@@ -1,5 +1,5 @@
-import {HOME_FIELDS,HOME_SECTIONS,homeDefaults} from './homepage-model.js?v=20260923-images3';
-import {assetURL,escapeHTML as esc,renderText} from './content-model.js?v=20260923-images3';
+import {HOME_FIELDS,HOME_SECTIONS,homeDefaults} from './homepage-model.js?v=20260923-forms4';
+import {assetURL,escapeHTML as esc,renderText} from './content-model.js?v=20260923-forms4';
 let copy=homeDefaults();
 export const homeText=key=>copy[key]??'';
 const lines=text=>String(text).split('\n').map(esc).join('<br>');
@@ -28,7 +28,7 @@ export function applyHome(home){
   if(el.tagName!=='A'){const a=document.createElement('a');a.className=el.className;a.append(...el.childNodes);el.replaceWith(a);el=a}
   const value=home[key];el.hidden=!value;el.setAttribute('aria-label',label);el.title=label;el.removeAttribute('aria-disabled');el.target='_blank';el.rel='noopener noreferrer';if(value)el.href=value;else el.removeAttribute('href');
  }
- const form=document.querySelector('#email-form');if(form){form.dataset.recipient=home.email;form.querySelector('[type="submit"]').disabled=!home.email;const status=document.querySelector('#email-status');if(status)status.textContent=home.email?home.emailReady:home.emailMissing}
+ const form=document.querySelector('#email-form');if(form){form.dataset.recipient=home.email;form.dataset.endpoint=home.formEndpoint;form.method="post";if(home.formEndpoint)form.action=home.formEndpoint;else form.removeAttribute("action");form.querySelector('[type="submit"]').disabled=!(home.formEndpoint||home.email);const status=document.querySelector('#email-status');if(status)status.textContent=(home.formEndpoint||home.email)?home.emailReady:home.emailMissing}
  // Preserve existing sections/handlers; visibility and order change only their container.
  const main=document.querySelector('#main');
  if(main){
@@ -40,3 +40,4 @@ export function applyHome(home){
   for(const [id,hash] of [['work','#work'],['about','#about'],['contact','#contact']])document.querySelectorAll(`a[href="${hash}"]`).forEach(a=>a.hidden=!home.visibility[id]);
  }
 }
+

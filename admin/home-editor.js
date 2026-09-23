@@ -1,5 +1,5 @@
-import {HOME_FIELDS,HOME_GROUPS,HOME_SECTIONS} from '../homepage-model.js?v=20260923-images3';
-import {assetURL,safeAsset,httpsURL,escapeHTML as esc} from '../content-model.js?v=20260923-images3';
+import {HOME_FIELDS,HOME_GROUPS,HOME_SECTIONS} from '../homepage-model.js?v=20260923-forms4';
+import {assetURL,safeAsset,httpsURL,escapeHTML as esc} from '../content-model.js?v=20260923-forms4';
 
 export function homeEditor({getContent,changed,imageData,notify}){
  const root=document.querySelector('#home-editor');
@@ -23,7 +23,7 @@ export function homeEditor({getContent,changed,imageData,notify}){
   }
   const [obj,key]=target(el);if(!obj)return;const f=HOME_FIELDS.find(f=>f.key===key),value=el.value.trim();
   if(key==='image'||f?.kind==='image'){if(value&&!safeAsset(value))throw Error('آدرس عکس باید https یا مسیر assets باشد.');obj[key]=value;changed();render()}
-  else if(f?.kind==='link'){if(value&&!httpsURL(value)&&!/^\.?\/[a-zA-Z0-9/_-]*$/.test(value))throw Error('لینک باید با https شروع شود یا مسیر داخلی سایت باشد.');obj[key]=value;changed()}
+  else if(f?.kind==='link'){if(key==='formEndpoint'&&value&&!/^https:\/\/formspree\.io\/f\/[a-zA-Z0-9]+$/.test(value))throw Error('آدرس فرم باید مانند https://formspree.io/f/xxxxxxxx باشد.');if(value&&!httpsURL(value)&&!/^\.?\/[a-zA-Z0-9/_-]*$/.test(value))throw Error('لینک باید با https شروع شود یا مسیر داخلی سایت باشد.');obj[key]=value;changed()}
   else if(f?.kind==='email'){if(value&&!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(value))throw Error('ایمیل معتبر وارد کنید.');obj[key]=value;changed()}
   else if(el.type==='checkbox'){obj[key]=el.checked;changed()}
  }catch(err){notify(err.message,true);render()}});
@@ -37,3 +37,4 @@ export function homeEditor({getContent,changed,imageData,notify}){
  });
  return {render};
 }
+
