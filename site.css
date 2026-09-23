@@ -71,3 +71,10 @@ html{scrollbar-gutter:stable}.work-card{text-align:left;color:inherit;font:inher
 
 /* Editable home sections keep their layout at any text length. */
 [hidden]{display:none!important}.hero-title .topline,.hero-title .bottomline{overflow-wrap:anywhere}.home-extra{padding-top:80px;padding-bottom:80px}.home-extra h2{font-size:clamp(32px,5vw,70px);margin-bottom:28px;overflow-wrap:anywhere}.home-extra>img{max-width:100%;max-height:650px;object-fit:contain;border-radius:20px;margin-bottom:24px}.home-extra .custom-section-body{max-width:800px}.about .reveal p{white-space:normal}.service-list h3,.service-list p,.stat p{overflow-wrap:anywhere}
+
+/* Confirmation stays visible after the contact dialog closes. */
+.contact-notice{position:fixed;z-index:1000;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100% - 32px));display:flex;align-items:flex-start;gap:14px;padding:22px;border:1px solid var(--line);border-radius:20px;background:var(--paper);color:var(--text);box-shadow:0 12px 50px #292e5026}
+.contact-notice-mark{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--lilac);color:var(--ink);font-size:21px}
+.contact-notice p{flex:1;min-width:0;font-size:14px;line-height:1.65}
+.contact-notice-dismiss{flex:none;display:grid;place-items:center;min-width:36px;min-height:36px;margin:-6px -8px 0 0;border-radius:50%;background:transparent;color:var(--ink);font-size:25px}
+.contact-notice-dismiss:hover{background:var(--lilac)}

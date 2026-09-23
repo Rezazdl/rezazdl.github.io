@@ -99,7 +99,8 @@
       "contact"
     ],
     "extraSections": [],
-    "formEndpoint": "https://formspree.io/f/xzezgavp"
+    "formEndpoint": "https://formspree.io/f/xzezgavp",
+    "emailSent": "Thanks for reaching out! Your message has been sent successfully. I’ll review it and get back to you as soon as possible."
   },
   "settings": {
     "heroVideo": "",

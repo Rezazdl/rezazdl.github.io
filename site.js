@@ -1,4 +1,4 @@
-import {installContactForm} from './contact-form.js?v=20260923-forms4';
+import {installContactForm} from './contact-form.js?v=20260923-confirm5';
 import {installImageRecovery} from './image-loading.js?v=20260923-forms4';
 import {applyHome,homeText} from './homepage.js?v=20260923-forms4';
 import {loadPublished,readDraft,normalizeContent,assetURL,youtubeId,renderText,escapeHTML} from './content-model.js?v=20260923-forms4';
